@@ -5,7 +5,8 @@
   "license": "Proprietary",
   "private": true,
   "description": "Web UX for UbiTok.io book contract",
-  "homepage" : "https://ubitok.io/exchange/TEST-ETH/",
+  "homepage" : "https://ubitok.io/exchange/TESTR-ETH/",
+  "alt_homepage" : "https://ubitok.io/exchange/DEMO-ETH/",
   "dependencies": {
     "eslint": "^4.4.1",
     "immutability-helper": "^2.2.2",
@@ -15,7 +16,7 @@
     "react-dom": "^15.6.1",
     "react-spinkit": "^3.0.0",
     "ubi-bootstrap": "file:../ubi-bootstrap",
-    "ubi-lib": "file:../../ubitok-jslib",
+    "ubitok-jslib": "file:../../ubitok-jslib",
     "web3": "^0.20.1"
   },
   "devDependencies": {

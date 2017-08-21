@@ -1,5 +1,5 @@
 import Web3 from "web3";
-import UbiTokTypes from "ubi-lib/ubi-tok-types.js";
+import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
 
 class Bridge {
 

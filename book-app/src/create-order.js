@@ -3,7 +3,7 @@ import { Alert, Button, ButtonToolbar, FormGroup, FormControl, ControlLabel, Hel
 
 import SendingButton from "./sending-button.js";
 
-import UbiTokTypes from "ubi-lib/ubi-tok-types.js";
+import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
 var BigNumber = UbiTokTypes.BigNumber;
 
 class CreateOrder extends React.Component {

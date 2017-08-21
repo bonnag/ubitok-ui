@@ -25,8 +25,8 @@ import "./App.css";
 import Bridge from "./bridge.js";
 import BookBuilder from './book-builder.js';
 import DemoBridge from "./demo-bridge.js";
-import UbiTokTypes from "ubi-lib/ubi-tok-types.js";
-import UbiBooks from "ubi-lib/ubi-books.js";
+import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
+import UbiBooks from "ubitok-jslib/ubi-books.js";
 
 let BigNumber = UbiTokTypes.BigNumber;
 

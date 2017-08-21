@@ -1,5 +1,5 @@
-import UbiTokTypes from "ubi-lib/ubi-tok-types.js";
-import ReferenceExchange from "ubi-lib/reference-exchange.js";
+import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
+import ReferenceExchange from "ubitok-jslib/reference-exchange.js";
 let BigNumber = UbiTokTypes.BigNumber;
 
 class DemoBridge {

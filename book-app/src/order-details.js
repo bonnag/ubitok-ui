@@ -5,7 +5,7 @@ import EthTxnLink from "./eth-txn-link.js";
 
 import moment from "moment";
 
-import UbiTokTypes from "ubi-lib/ubi-tok-types.js";
+import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
 
 class OrderDetails extends React.Component {
 
