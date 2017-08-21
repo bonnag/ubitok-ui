@@ -293,7 +293,7 @@ class CreateOrder extends React.Component {
             <SendingButton bsStyle={(this.props.direction === "Buy") ? "primary" : "warning"} onClick={this.handlePlaceOrder} text={"Place " + this.props.direction + " Order"} />
           </ButtonToolbar>
           <HelpBlock>
-            Please read our <a target="_blank" href="http://ubitok.io/trading-rules.html" rel="noopener noreferrer">Trading Rules</a> for help and terms.
+            Please read our <a target="_blank" href="http://ubitok.io/trading-rules" rel="noopener noreferrer">Trading Rules</a> for help and terms.
           </HelpBlock>
         </FormGroup>
       </div>
