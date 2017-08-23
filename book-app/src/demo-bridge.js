@@ -1,5 +1,10 @@
 import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
 import ReferenceExchange from "ubitok-jslib/reference-exchange.js";
+
+import DemoActorWhale from "./demo-actor-whale.js"
+import DemoActorSniper from "./demo-actor-sniper.js"
+import DemoActorStacker from "./demo-actor-stacker.js"
+
 let BigNumber = UbiTokTypes.BigNumber;
 
 class DemoBridge {
@@ -22,42 +27,64 @@ class DemoBridge {
     this.txnCounter = 0;
 
     this.rx = new ReferenceExchange();
-    this.rxQueue = [];
-
-    // TODO - set up simulated market history
-    // TODO - set up simulated market actors
-    let actorAccount = '0xDemoActor1';
-    this.rx.depositBaseForTesting(actorAccount, UbiTokTypes.encodeBaseAmount("10000"));
-    this.rx.depositCntrForTesting(actorAccount, UbiTokTypes.encodeCntrAmount("1000"));
-    this.rx.createOrder(
-      actorAccount,
-      UbiTokTypes.generateDecodedOrderId(),
-      "Buy @ 0.0120",
-      UbiTokTypes.encodeBaseAmount("1000"),
-      "MakerOnly",
-      0
-    );
-    this.rx.createOrder(
-      actorAccount,
-      UbiTokTypes.generateDecodedOrderId(),
-      "Sell @ 0.0175",
-      UbiTokTypes.encodeBaseAmount("2000"),
-      "MakerOnly",
-      0
-    );
+    this.sendingQueue = [];
+    this.miningQueue = [];
+    
+    var realNow = (new Date()).getTime();
+    var now = realNow - 30 * 60 * 1000;
+    
+    this._actors = [];
+    this._addActor(new DemoActorWhale(this, "0xDemoActorBuyWhale", "Buy", now));
+    this._addActor(new DemoActorWhale(this, "0xDemoActorSellWhale", "Sell", now));
+    this._addActor(new DemoActorSniper(this, "0xDemoActorBuySniper", "Buy", now));
+    this._addActor(new DemoActorSniper(this, "0xDemoActorSellSniper", "Sell", now));
+    this._addActor(new DemoActorStacker(this, "0xDemoActorBuyStacker", "Buy", now));
+    this._addActor(new DemoActorStacker(this, "0xDemoActorSellStacker", "Sell", now));
     this.rx.collectEvents();
     
-    this.rx.depositBaseForTesting(this.chosenAccount, UbiTokTypes.encodeBaseAmount("10000"));
-    this.rx.depositCntrForTesting(this.chosenAccount, UbiTokTypes.encodeCntrAmount("1000"));
+    this._rawHistoricMarketEvents = [];
+    while (now < realNow) {
+      this._advanceActorsAt(now);
+      this._processSendingQueue();
+      this._processMiningQueue(new Date(now));
+      now += 10 * 1000;
+    }
+    this.historicMarketEvents = this._rawHistoricMarketEvents.map(me => {
+      return this._translateMarketOrderEvent(me, me.maybeBlockDate);
+    });
+    this._rawHistoricMarketEvents = undefined;
+    
+    // give user some play money
+    this.rx.depositBaseForTesting(this.chosenAccount, UbiTokTypes.encodeBaseAmount("1000"));
+    this.rx.depositCntrForTesting(this.chosenAccount, UbiTokTypes.encodeCntrAmount("200"));
 
-    window.setInterval(this._mineQueue, 5000);
+    window.setInterval(this._processSendingQueue, 3000);
+    window.setInterval(this._processMiningQueue, 5000);
     window.setTimeout(this._pollStatus, 1000);
+    window.setInterval(this._advanceActors, 2000);
   }
 
-  _mineQueue = () => {
+  _processSendingQueue = () => {
+    let errors = [];
+    for (let txn of this.sendingQueue) {
+      this.txnCounter++;
+      try {
+        this.miningQueue.push(txn);
+        txn.callback(undefined, {event: "GotTxnHash", txnHash: "0xDemoTxn" + this.txnCounter});
+      } catch (e) {
+        errors.push(e);
+      }
+    }
+    this.sendingQueue = [];
+    for (let delayedError of errors) {
+      throw delayedError;
+    }
+  }
+  
+  _processMiningQueue = (maybeBlockDate) => {
     this.blockNumber++;
     let errors = [];
-    for (let txn of this.rxQueue) {
+    for (let txn of this.miningQueue) {
       try {
         txn.invokeFn();
       } catch (e) {
@@ -67,10 +94,11 @@ class DemoBridge {
       try {
         txn.callback(undefined, {event:"Mined"});
       } catch (e) {
+        // TODO - should be TxnFailed now?
         errors.push(e);
       }
     }
-    this.rxQueue = [];
+    this.miningQueue = [];
     for (let delayedError of errors) {
       throw delayedError;
     }
@@ -79,27 +107,47 @@ class DemoBridge {
     for (let event of events) {
       event.blockNumber = this.blockNumber;
       event.logIndex = logIndex++;
+      event.maybeBlockDate = maybeBlockDate;
       if (event.eventType === "MarketOrderEvent") {
-        this._deliverFutureMarketEvent(event);
+        this._deliverMarketOrderEvent(event);
       }
     }
   }
 
+  _addActor = (actor) => {
+    this._actors.push(actor);
+    this.rx.depositBaseForTesting(actor.actorAccount, UbiTokTypes.encodeBaseAmount("100000000"));
+    this.rx.depositCntrForTesting(actor.actorAccount, UbiTokTypes.encodeCntrAmount("10000000"));
+  }
+
+  // to make the demo more interesting, have some actors buying and selling ...
+  _advanceActors = () => {
+    var now = (new Date()).getTime();
+    this._advanceActorsAt(now);
+  }
+
+  _advanceActorsAt = (now) => {
+    // pretend there is a true price and true spread which vary over time
+    var truePrice = 0.4 + 0.1 * this._computePeriodicValue(now, 113, 1279);
+    var trueSpread = 0.02 + 0.01 * this._computePeriodicValue(now, 209, 653);
+    for (let actor of this._actors) {
+      actor.advance(now, truePrice, trueSpread);
+    }
+  }
+
+  _computePeriodicValue = (now, shortPeriodSeconds, longPeriodSeconds) => {
+    var shortFactor = Math.sin(now / 1000 / shortPeriodSeconds * 2 * Math.PI);
+    var longFactor = Math.sin(now / 1000 / longPeriodSeconds * 2 * Math.PI);
+    return 0.1 * shortFactor + 0.9 * longFactor;
+  }
+
   _queueTxn = (invokeFn, txnObj, callback) => {
     // TODO - txns, callbacks, etc
-    this.rxQueue.push({
+    this.sendingQueue.push({
       invokeFn: invokeFn,
       txnObj: txnObj,
       callback: callback
     });
-    this.txnCounter++;
-    this._scheduleConfirmTxn(() => {
-      callback(undefined, {event: "GotTxnHash", txnHash: "0xDemoTxn" + this.txnCounter});
-    });
-  }
-
-  _scheduleConfirmTxn = (invokeFn) => {
-    window.setTimeout(invokeFn, 2000);
   }
 
   _scheduleRead = (invokeFn) => {
@@ -332,18 +380,25 @@ class DemoBridge {
     this.futureMarketEventSubscribers.push(callback);
   }
 
-  _deliverFutureMarketEvent = (refEvent) => {
-    let fmtEvent = {
+  _translateMarketOrderEvent = (refEvent, date) => {
+    return {
       blockNumber: refEvent.blockNumber,
       logIndex: refEvent.logIndex,
       eventRemoved: false,
-      eventTimestamp: new Date(), // TODO - virtualize
+      eventTimestamp: date,
       marketOrderEventType: refEvent.marketOrderEventType,
       orderId: refEvent.orderId,
       pricePacked: UbiTokTypes.encodePrice(refEvent.price),
       rawDepthBase: refEvent.depthBase,
       rawTradeBase: refEvent.tradeBase
     };
+  }
+
+  _deliverMarketOrderEvent = (refEvent) => {
+    if (this._rawHistoricMarketEvents) {
+      this._rawHistoricMarketEvents.push(refEvent);
+    }
+    let fmtEvent = this._translateMarketOrderEvent(refEvent, new Date());
     for (let observer of this.futureMarketEventSubscribers) {
       observer(undefined, fmtEvent);
     }
@@ -354,11 +409,8 @@ class DemoBridge {
   // elements as returned by UbiTokTypes.decodeMarketOrderEvent.
   // Returns nothing useful.
   getHistoricMarketEvents = (callback) => {
-    // TODO - should we bother implementing this?
-    // Perhaps by running through events in contract at time
-    // of bridge creation? Maybe assigning made up dates? Hmm.
     this._scheduleRead(() => {
-      callback(undefined, []);
+      callback(undefined, this.historicMarketEvents);
     });
   }
 
