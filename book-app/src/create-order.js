@@ -68,6 +68,9 @@ class CreateOrder extends React.Component {
     if (number.isNaN() || !number.isFinite()) {
       return ["error", "Amount does not look like a regular number"];
     }
+    if (number.decimalPlaces() >= UbiTokTypes.baseDecimals || number.decimalPlaces() > 10) {
+      return ["error", "Amount has too many decimal places"];
+    }
     let rawAmountBase = UbiTokTypes.encodeBaseAmount(amount);
     let minInitialSize = this.props.pairInfo.base.minInitialSize;
     if (rawAmountBase.lt(UbiTokTypes.encodeBaseAmount(minInitialSize))) {
