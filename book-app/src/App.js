@@ -18,6 +18,7 @@ import CreateOrder from "./create-order.js";
 import SendingButton from "./sending-button.js";
 import EthTxnLink from "./eth-txn-link.js";
 import OrderDetails from "./order-details.js";
+import DemoHelp from "./demo-help.js";
 // TODO - move payment forms to seperate components
 
 import "./App.css";
@@ -193,7 +194,9 @@ class App extends Component {
       
       "marketTrades": {
       },
-      "marketTradesLoaded": false
+      "marketTradesLoaded": false,
+
+      "showDemoHelp": true // TODO - make it come from a cookie
     };
     this.bridge.subscribeStatus(this.handleStatusUpdate);
     window.setInterval(this.pollBalances, 3000);
@@ -208,6 +211,14 @@ class App extends Component {
 
   warn = (msg) => {
     console.log(msg);
+  }
+  
+  handleDemoHelpHide = () => {
+    this.setState((prevState, props) => {
+      return {
+        showDemoHelp: false
+      };
+    });
   }
   
   updateClock = () => {
@@ -731,6 +742,12 @@ class App extends Component {
       window.open("https://ubitok.io/", "_blank");
     } else if (key === "ViewBooks") {
       window.open("https://ubitok.io/products/", "_blank");
+    } else if (key === "DemoHelp") {
+      this.setState((prevState, props) => {
+        return {
+          showDemoHelp: true
+        };
+      });
     }
   }
   
@@ -757,12 +774,16 @@ class App extends Component {
               <Nav bsStyle="pills" pullRight activeKey="Exchange" onSelect={this.handleTopNavSelect}>
                 <NavItem eventKey="Home" href="#">Home</NavItem>
                 <NavItem eventKey="Exchange" href="#">Exchange</NavItem>
+                { (this.state.pairInfo.liveness === "DEMO") ? (
+                  <NavItem eventKey="DemoHelp" href="#">Help</NavItem>
+                ) : undefined }
               </Nav>
             </Navbar>
           </Row>
           <Row>
             <Col md={12}>
               <BridgeStatus bridgeStatus={this.state.bridgeStatus} />
+              <DemoHelp show={this.state.showDemoHelp} onHide={this.handleDemoHelpHide}/>
             </Col>
           </Row>
           <Row>
@@ -880,6 +901,66 @@ class App extends Component {
                 </tbody>
               </Table>
               <Tab.Container activeKey={this.state.paymentTabKey} onSelect={()=>{}} id="payment-tabs">
+                { (this.state.pairInfo.liveness === "DEMO") ? (
+                  <Tab.Content>
+                  <Tab.Pane eventKey="none" className="emptyTabPane">
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="depositBase">
+                    <p>
+                      <b>Deposit {this.state.pairInfo.base.symbol}</b>
+                      <Button bsSize="xsmall" className="pull-right" bsStyle="default" onClick={() => this.setState({paymentTabKey: "none"})}>
+                        <Glyphicon glyph="remove" title="close" />
+                      </Button>
+                    </p>
+                    <p>Payments are not yet supported in the demo.</p>
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="withdrawBase">
+                    <p>
+                      <b>Withdraw {this.state.pairInfo.base.symbol}</b>
+                      <Button bsSize="xsmall" className="pull-right" bsStyle="default" onClick={() => this.setState({paymentTabKey: "none"})}>
+                        <Glyphicon glyph="remove" title="close" />
+                      </Button>
+                    </p>
+                    <p>Payments are not yet supported in the demo.</p>
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="depositCntr">
+                    <p>
+                      <b>Deposit {this.state.pairInfo.cntr.symbol}</b>
+                      <Button bsSize="xsmall" className="pull-right" bsStyle="default" onClick={() => this.setState({paymentTabKey: "none"})}>
+                        <Glyphicon glyph="remove" title="close" />
+                      </Button>
+                    </p>
+                    <p>Payments are not yet supported in the demo.</p>
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="withdrawCntr">
+                    <p>
+                      <b>Withdraw {this.state.pairInfo.cntr.symbol}</b>
+                      <Button bsSize="xsmall" className="pull-right" bsStyle="default" onClick={() => this.setState({paymentTabKey: "none"})}>
+                        <Glyphicon glyph="remove" title="close" />
+                      </Button>
+                    </p>
+                    <p>Payments are not yet supported in the demo.</p>
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="depositRwrd">
+                    <p>
+                      <b>Deposit {this.state.pairInfo.rwrd.symbol}</b>
+                      <Button bsSize="xsmall" className="pull-right" bsStyle="default" onClick={() => this.setState({paymentTabKey: "none"})}>
+                        <Glyphicon glyph="remove" title="close" />
+                      </Button>
+                    </p>
+                    <p>Payments are not yet supported in the demo.</p>
+                  </Tab.Pane>
+                  <Tab.Pane eventKey="withdrawRwrd">
+                    <p>
+                      <b>Withdraw {this.state.pairInfo.rwrd.symbol}</b>
+                      <Button bsSize="xsmall" className="pull-right" bsStyle="default" onClick={() => this.setState({paymentTabKey: "none"})}>
+                        <Glyphicon glyph="remove" title="close" />
+                      </Button>
+                    </p>
+                    <p>Payments are not yet supported in the demo.</p>
+                    </Tab.Pane>
+                </Tab.Content>
+                ) : (
                 <Tab.Content>
                   <Tab.Pane eventKey="none" className="emptyTabPane">
                   </Tab.Pane>
@@ -1038,6 +1119,7 @@ class App extends Component {
                     </p>
                   </Tab.Pane>
                 </Tab.Content>
+                )}
               </Tab.Container>
             </Col>
             <Col md={4}>
