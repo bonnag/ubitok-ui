@@ -49,11 +49,11 @@
 }
 
 .capped-table {
-  max-height: 400px;
+  max-height: 250px;
   overflow: auto;
 }
 
 .capped-table-small {
-  max-height: 200px;
+  max-height: 280px;
   overflow: auto;
 }

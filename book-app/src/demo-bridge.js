@@ -50,7 +50,7 @@ class DemoBridge {
       now += 10 * 1000;
     }
     this.historicMarketEvents = this._rawHistoricMarketEvents.map(me => {
-      return this._translateMarketOrderEvent(me, me.maybeBlockDate);
+      return this._translateMarketOrderEvent(me);
     });
     this._rawHistoricMarketEvents = undefined;
     
@@ -83,6 +83,7 @@ class DemoBridge {
   
   _processMiningQueue = (maybeBlockDate) => {
     this.blockNumber++;
+    this.blockDate = maybeBlockDate ? maybeBlockDate : new Date();
     let errors = [];
     for (let txn of this.miningQueue) {
       try {
@@ -107,7 +108,7 @@ class DemoBridge {
     for (let event of events) {
       event.blockNumber = this.blockNumber;
       event.logIndex = logIndex++;
-      event.maybeBlockDate = maybeBlockDate;
+      event.blockDate = this.blockDate;
       if (event.eventType === "MarketOrderEvent") {
         this._deliverMarketOrderEvent(event);
       }
@@ -168,7 +169,8 @@ class DemoBridge {
       accountChanged: false,
       canMakePublicCalls: false,
       canMakeAccountCalls: false,
-      withinGracePeriod: true
+      withinGracePeriod: true,
+      blockInfo: ""
     };
   }
 
@@ -181,6 +183,11 @@ class DemoBridge {
   }
 
   getUpdatedStatus = () => {
+    let blockAge = 0;
+    if (this.blockDate) {
+      let millis = (new Date()).getTime() - this.blockDate.getTime();
+      blockAge = Math.floor(millis / 1000);
+    }
     return {
       web3Present: true,
       unsupportedNetwork: false,
@@ -192,7 +199,8 @@ class DemoBridge {
       accountChanged: false,
       canMakePublicCalls: true,
       canMakeAccountCalls: true,
-      withinGracePeriod: false
+      withinGracePeriod: false,
+      blockInfo: this.blockNumber + " (" + blockAge + "s ago)"
     };
   }
 
@@ -380,12 +388,12 @@ class DemoBridge {
     this.futureMarketEventSubscribers.push(callback);
   }
 
-  _translateMarketOrderEvent = (refEvent, date) => {
+  _translateMarketOrderEvent = (refEvent) => {
     return {
       blockNumber: refEvent.blockNumber,
       logIndex: refEvent.logIndex,
       eventRemoved: false,
-      eventTimestamp: date,
+      eventTimestamp: refEvent.blockDate,
       marketOrderEventType: refEvent.marketOrderEventType,
       orderId: refEvent.orderId,
       pricePacked: UbiTokTypes.encodePrice(refEvent.price),
@@ -398,7 +406,7 @@ class DemoBridge {
     if (this._rawHistoricMarketEvents) {
       this._rawHistoricMarketEvents.push(refEvent);
     }
-    let fmtEvent = this._translateMarketOrderEvent(refEvent, new Date());
+    let fmtEvent = this._translateMarketOrderEvent(refEvent);
     for (let observer of this.futureMarketEventSubscribers) {
       observer(undefined, fmtEvent);
     }

@@ -79,7 +79,6 @@ class BookBuilder {
         asks.push(niceEntry);
       }
     }
-    asks.reverse();
     return [bids, asks];
   }
 

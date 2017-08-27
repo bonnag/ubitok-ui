@@ -14,6 +14,8 @@ class Bridge {
     this.chosenSupportedNetworkName = undefined;
     this.chosenAccount = undefined;
     this.initialBlockNumber = undefined;
+    this.blockNumber = undefined;
+    this.blockDate = undefined;
     this.statusSubscribers = [];
     this.startedConnectingAt = new Date();
 
@@ -34,7 +36,8 @@ class Bridge {
       accountChanged: false,
       canMakePublicCalls: false,
       canMakeAccountCalls: false,
-      withinGracePeriod: true
+      withinGracePeriod: true,
+      blockInfo: ""
     };
   }
 
@@ -89,6 +92,12 @@ class Bridge {
     }
     let accountChanged = web3Present && this.chosenAccount !== undefined && firstAccount !== this.chosenAccount;
     let canMakePublicCalls = web3Present && !unsupportedNetwork && !networkChanged && this.initialBlockNumber;
+    let blockInfo = "";
+    if (this.blockNumber && this.blockDate) {
+      let millis = (new Date()).getTime() - this.blockDate.getTime();
+      let blockAge = Math.floor(millis / 1000);
+      blockInfo = this.blockNumber + " (" + blockAge + "s ago)";
+    }
     return {
       web3Present: web3Present,
       unsupportedNetwork: unsupportedNetwork,
@@ -100,18 +109,26 @@ class Bridge {
       accountChanged: accountChanged,
       canMakePublicCalls: canMakePublicCalls,
       canMakeAccountCalls: canMakePublicCalls && !accountLocked && !accountChanged,
-      withinGracePeriod: (new Date() - this.startedConnectingAt) < 5000
+      withinGracePeriod: (new Date() - this.startedConnectingAt) < 5000,
+      blockInfo: blockInfo
     };
   }
 
   // Internal - we need this to help filter events.
   // We don't consider the bridge ready to make calls until we've got it.
   _handleBlockNumber = (error, result) => {
-    if (error) {
-      // TODO
-      return;
+    if (!error) {
+      if (!this.initialBlockNumber) {
+        this.initialBlockNumber = result;
+      }
+      if (result != this.blockNumber) {
+        this.blockNumber = result;
+        this.blockDate = new Date();
+      }
     }
-    this.initialBlockNumber = result;
+    window.setTimeout(() => {
+      this.web3.eth.getBlockNumber(this._handleBlockNumber);
+    }, 4000);
   }
 
   // Request periodic callbacks with latest bridge status.

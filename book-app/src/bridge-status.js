@@ -58,12 +58,8 @@ class BridgeStatus extends React.Component {
           <p>Some unusual problem has occurred preventing UbiTok.io connecting to the Ethereum Network.</p>
           <p>Try reloading this page, or contact help@ubitok.io with details of the problem.</p>
         </Panel>
-      ) : (
-        <Well bsSize="small">
-          <Glyphicon glyph="info-sign" title="Ethereum Connection Info" />
-        &nbsp;Using Ethereum Account {this.props.bridgeStatus.chosenAccount} on {this.props.bridgeStatus.chosenSupportedNetworkName} via a local client.
-        </Well>
-      )}</div>
+      ) : undefined
+      }</div>
     );
   }
 }

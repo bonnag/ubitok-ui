@@ -14,11 +14,13 @@ import DemoLogo from "./demo-logo.svg";
 import TestLogo from "./test-logo.svg";
 
 import BridgeStatus from "./bridge-status.js";
+import BridgeStatusNav from "./bridge-status-nav.js";
 import CreateOrder from "./create-order.js";
 import SendingButton from "./sending-button.js";
 import EthTxnLink from "./eth-txn-link.js";
 import OrderDetails from "./order-details.js";
 import DemoHelp from "./demo-help.js";
+import BookInfo from "./book-info.js";
 // TODO - move payment forms to seperate components
 
 import "./App.css";
@@ -196,7 +198,10 @@ class App extends Component {
       },
       "marketTradesLoaded": false,
 
-      "showDemoHelp": true // TODO - make it come from a cookie
+       // TODO - use a cookie to stop showing it every time
+      "showDemoHelp": networkInfo.liveness === "DEMO",
+
+      "showBookInfo": false
     };
     this.bridge.subscribeStatus(this.handleStatusUpdate);
     window.setInterval(this.pollBalances, 3000);
@@ -215,9 +220,19 @@ class App extends Component {
   
   handleDemoHelpHide = () => {
     this.setState((prevState, props) => {
-      return {
-        showDemoHelp: false
-      };
+      return { showDemoHelp: false };
+    });
+  }
+
+  handleBookInfoShow = () => {
+    this.setState((prevState, props) => {
+      return { showBookInfo: true };
+    });
+  }
+
+  handleBookInfoHide = () => {
+    this.setState((prevState, props) => {
+      return { showBookInfo: false };
     });
   }
   
@@ -771,6 +786,12 @@ class App extends Component {
                   <MenuItem eventKey="ViewBooks">View All Products ...</MenuItem>
                 </NavDropdown>
               </Nav>
+              <Navbar.Text style={{marginLeft: "-10px"}}>
+                <Button bsSize="xsmall" bsStyle="info" onClick={this.handleBookInfoShow}>
+                  <Glyphicon glyph="info-sign" title="book info" />
+                </Button>
+              </Navbar.Text>
+              <BridgeStatusNav bridgeStatus={this.state.bridgeStatus} />
               <Nav bsStyle="pills" pullRight activeKey="Exchange" onSelect={this.handleTopNavSelect}>
                 <NavItem eventKey="Home" href="#">Home</NavItem>
                 <NavItem eventKey="Exchange" href="#">Exchange</NavItem>
@@ -784,43 +805,12 @@ class App extends Component {
             <Col md={12}>
               <BridgeStatus bridgeStatus={this.state.bridgeStatus} />
               <DemoHelp show={this.state.showDemoHelp} onHide={this.handleDemoHelpHide}/>
+              <BookInfo pairInfo={this.state.pairInfo} show={this.state.showBookInfo} onHide={this.handleBookInfoHide}/>
             </Col>
           </Row>
           <Row>
             <Col md={4}>
-              <h3>{this.state.pairInfo.symbol} Info</h3>
-              <Table striped bordered condensed hover>
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Base</th>
-                    <th>Counter</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Symbol</td>
-                    <td>{this.state.pairInfo.base.symbol}</td>
-                    <td>{this.state.pairInfo.cntr.symbol}</td>
-                  </tr>
-                  <tr>
-                    <td>Name</td>
-                    <td>{this.state.pairInfo.base.name}</td>
-                    <td>{this.state.pairInfo.cntr.name}</td>
-                  </tr>
-                  <tr>
-                    <td>Type</td>
-                    <td>{this.state.pairInfo.base.tradableType}</td>
-                    <td>{this.state.pairInfo.cntr.tradableType}</td>
-                  </tr>
-                  <tr>
-                    <td>Minimum Order</td>
-                    <td>{this.state.pairInfo.base.minInitialSize}</td>
-                    <td>{this.state.pairInfo.cntr.minInitialSize}</td>
-                  </tr>
-                </tbody>
-              </Table>
-              <h3>Balances and Payments</h3>
+              <h5>Balances and Payments</h5>
               <Table bordered condensed id="funds-table">
                 <tbody>
                   <tr>
@@ -1121,105 +1111,8 @@ class App extends Component {
                 </Tab.Content>
                 )}
               </Tab.Container>
-            </Col>
-            <Col md={4}>
-              <h3>
-                  Order Book
-                {this.state.book.isComplete ? undefined : (
-                  <Spinner name="line-scale" color="purple"/>
-                )}
-              </h3>
-              <div className="capped-table-small">
-                <Table striped bordered condensed hover>
-                  <thead>
-                    <tr>
-                      <th>Ask Price</th>
-                      <th>Depth ({this.state.pairInfo.base.symbol})</th>
-                      <th>Count</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {this.state.book.asks.map((entry) =>
-                      <tr key={entry[0]}>
-                        <td className={this.chooseClassNameForPrice(entry[0])}>{entry[0]}</td>
-                        <td>{entry[1]}</td>
-                        <td>{entry[2]}</td>
-                      </tr>
-                    )}
-                    {this.state.book.isComplete && this.state.book.asks.length === 0 ? (
-                      <tr key="dummy">
-                        <td colSpan="3">No sell orders found - fancy making a market ...?</td>
-                      </tr>
-                    ) : undefined}
-                  </tbody>
-                </Table>
-              </div>
-              <div className="capped-table-small">
-                <Table striped bordered condensed hover>
-                  <thead>
-                    <tr>
-                      <th>Bid Price</th>
-                      <th>Depth ({this.state.pairInfo.base.symbol})</th>
-                      <th>Count</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {this.state.book.bids.map((entry) =>
-                      <tr key={entry[0]}>
-                        <td className={this.chooseClassNameForPrice(entry[0])}>{entry[0]}</td>
-                        <td>{entry[1]}</td>
-                        <td>{entry[2]}</td>
-                      </tr>
-                    )}
-                    {this.state.book.isComplete && this.state.book.bids.length === 0 ? (
-                      <tr key="dummy">
-                        <td colSpan="3">No buy orders found - fancy making a market ...?</td>
-                      </tr>
-                    ) : undefined}
-                  </tbody>
-                </Table>
-              </div>
-            </Col>
-            <Col md={4}>
-              <h3>
-                  Market Trades
-                {this.state.marketTradesLoaded ? undefined : (
-                  <Spinner name="line-scale" color="purple"/>
-                )}
-              </h3>
-              <div className="capped-table">
-                <Table striped bordered condensed hover>
-                  <thead>
-                    <tr>
-                      <th>Time</th>
-                      <th>Price</th>
-                      <th>Size ({this.state.pairInfo.base.symbol})</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.keys(this.state.marketTrades)
-                      .sort(this.cmpMarketTradeIds)
-                      .map((marketTradeId) => this.state.marketTrades[marketTradeId])
-                      .map((entry) =>
-                        <tr key={entry.marketTradeId}>
-                          <td>{this.formatEventDate(entry.eventTimestamp)}</td>
-                          <td className={this.chooseClassNameForPrice(entry.makerPrice)}>{entry.makerPrice}</td>
-                          <td>{entry.executedBase}</td>
-                        </tr>
-                      )}
-                    {this.state.marketTradesLoaded && Object.keys(this.state.marketTrades).length === 0 ? (
-                      <tr key="dummy">
-                        <td colSpan="3">No recent market trades found.</td>
-                      </tr>
-                    ) : undefined}
-                  </tbody>
-                </Table>
-              </div>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={4}>
-              <h3>Create Order</h3>
+
+              <h5>Create Order</h5>
               {/* need tabs inline here - https://github.com/react-bootstrap/react-bootstrap/issues/1936 */}
               <Tabs activeKey={this.state.createOrderDirection} onSelect={this.handleCreateOrderDirectionSelect} id="create-order-direction">
                 <Tab eventKey="Buy" title={"BUY " + this.state.pairInfo.base.symbol}>
@@ -1229,78 +1122,190 @@ class App extends Component {
                   <CreateOrder direction="Sell" pairInfo={this.state.pairInfo} balances={this.state.balances} bridgeStatus={this.state.bridgeStatus} onPlace={this.handlePlaceOrder} />
                 </Tab>
               </Tabs>
+              
             </Col>
             <Col md={8}>
-              <h3>
-                   My Orders
-                {this.state.myOrdersLoaded ? undefined : (
-                  <Spinner name="line-scale" color="purple"/>
-                )}
-              </h3>
-              <div className="capped-table">
-                <Table striped bordered condensed hover>
-                  <thead>
-                    <tr>
-                      <th>Created</th>
-                      <th>Price</th>
-                      <th>Size ({this.state.pairInfo.base.symbol})</th>
-                      <th>Status</th>
-                      <th>Filled ({this.state.pairInfo.base.symbol})</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {this.getMySortedOrders().map((entry) =>
-                      <tr key={entry.orderId}>
-                        <td>{this.formatCreationDateOf(entry.orderId)}</td>
-                        <td className={this.chooseClassNameForPrice(entry.price)}>{entry.price}</td>
-                        <td>{entry.sizeBase}</td>
-                        <td>
-                          {entry.status + ((entry.modifyInProgress !== undefined) ? " (" + entry.modifyInProgress + ")" : "")}
-                          { (entry.status === "Sending" || entry.modifyInProgress !== undefined) ? (
-                            <Spinner name="line-scale" color="purple"/>
-                          ) : undefined }
-                        </td>
-                        <td>{this.formatBase(entry.rawExecutedBase)}</td>
-                        <td>
-                          <ButtonToolbar>
-                            <Button bsSize="xsmall" bsStyle="info" onClick={() => this.handleClickMoreInfo(entry.orderId)}>
-                              <Glyphicon glyph="info-sign" title="more info" />
-                            </Button>
-                            { (entry.status === "Open" || entry.status === "NeedsGas") ? (
-                              <Button bsSize="xsmall" bsStyle="danger" onClick={() => this.handleClickCancelOrder(entry.orderId)}>
-                                <Glyphicon glyph="remove" title="cancel order" />
-                              </Button>
-                            ) : undefined }
-                            { (entry.status === "NeedsGas") ? (
-                              <Button bsSize="xsmall" bsStyle="primary" onClick={() => this.handleClickContinueOrder(entry.orderId)}>
-                                <Glyphicon glyph="forward" title="continue placing order" />
-                              </Button>
-                            ) : undefined }
-                            { (entry.status !== "Open" && entry.status !== "NeedsGas" && entry.status !== "Sending") ? (
-                              <Button bsSize="xsmall" bsStyle="default" onClick={() => this.handleClickHideOrder(entry.orderId)}>
-                                <Glyphicon glyph="eye-close" title="hide order" />
-                              </Button>
-                            ) : undefined }
-                          </ButtonToolbar>
-                        </td>
-                      </tr>
+              <Row>
+                <Col md={12}>
+                  <h5>
+                      Order Book
+                    {this.state.book.isComplete ? undefined : (
+                      <Spinner name="line-scale" color="purple"/>
                     )}
-                    {this.state.myOrdersLoaded && Object.keys(this.state.myOrders).length === 0 ? (
-                      <tr key="dummy">
-                        <td colSpan="6">No open or recent orders found for your address.</td>
-                      </tr>
-                    ) : undefined}
-                  </tbody>
-                </Table>
-              </div>
-              <OrderDetails
-                show={this.state.showOrderInfo}
-                onClose={this.handleOrderInfoCloseClick}
-                myOrder={this.state.myOrders[this.state.orderInfoOrderId]} 
-                pairInfo={this.state.pairInfo}
-                chosenSupportedNetworkName={this.state.bridgeStatus.chosenSupportedNetworkName}
-                clock={this.state.clock} />
+                  </h5>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={6}>
+                  <div className="capped-table-small">
+                    <Table striped bordered condensed hover>
+                      <thead>
+                        <tr>
+                          <th>Ask Price</th>
+                          <th>Depth ({this.state.pairInfo.base.symbol})</th>
+                          <th>Count</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {this.state.book.asks.map((entry) =>
+                          <tr key={entry[0]}>
+                            <td className={this.chooseClassNameForPrice(entry[0])}>{entry[0]}</td>
+                            <td>{entry[1]}</td>
+                            <td>{entry[2]}</td>
+                          </tr>
+                        )}
+                        {this.state.book.isComplete && this.state.book.asks.length === 0 ? (
+                          <tr key="dummy">
+                            <td colSpan="3">No sell orders found - fancy making a market ...?</td>
+                          </tr>
+                        ) : undefined}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Col>
+                <Col md={6}>
+                  <div className="capped-table-small">
+                    <Table striped bordered condensed hover>
+                      <thead>
+                        <tr>
+                          <th>Bid Price</th>
+                          <th>Depth ({this.state.pairInfo.base.symbol})</th>
+                          <th>Count</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {this.state.book.bids.map((entry) =>
+                          <tr key={entry[0]}>
+                            <td className={this.chooseClassNameForPrice(entry[0])}>{entry[0]}</td>
+                            <td>{entry[1]}</td>
+                            <td>{entry[2]}</td>
+                          </tr>
+                        )}
+                        {this.state.book.isComplete && this.state.book.bids.length === 0 ? (
+                          <tr key="dummy">
+                            <td colSpan="3">No buy orders found - fancy making a market ...?</td>
+                          </tr>
+                        ) : undefined}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Col>
+              </Row>
+
+              <Row>
+                <Col md={12}>
+                  <h5>
+                      My Orders
+                    {this.state.myOrdersLoaded ? undefined : (
+                      <Spinner name="line-scale" color="purple"/>
+                    )}
+                  </h5>
+                  <div className="capped-table">
+                    <Table striped bordered condensed hover>
+                      <thead>
+                        <tr>
+                          <th>Created</th>
+                          <th>Price</th>
+                          <th>Size ({this.state.pairInfo.base.symbol})</th>
+                          <th>Status</th>
+                          <th>Filled ({this.state.pairInfo.base.symbol})</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {this.getMySortedOrders().map((entry) =>
+                          <tr key={entry.orderId}>
+                            <td>{this.formatCreationDateOf(entry.orderId)}</td>
+                            <td className={this.chooseClassNameForPrice(entry.price)}>{entry.price}</td>
+                            <td>{entry.sizeBase}</td>
+                            <td>
+                              {entry.status + ((entry.modifyInProgress !== undefined) ? " (" + entry.modifyInProgress + ")" : "")}
+                              { (entry.status === "Sending" || entry.modifyInProgress !== undefined) ? (
+                                <Spinner name="line-scale" color="purple"/>
+                              ) : undefined }
+                            </td>
+                            <td>{this.formatBase(entry.rawExecutedBase)}</td>
+                            <td>
+                              <ButtonToolbar>
+                                <Button bsSize="xsmall" bsStyle="info" onClick={() => this.handleClickMoreInfo(entry.orderId)}>
+                                  <Glyphicon glyph="info-sign" title="more info" />
+                                </Button>
+                                { (entry.status === "Open" || entry.status === "NeedsGas") ? (
+                                  <Button bsSize="xsmall" bsStyle="danger" onClick={() => this.handleClickCancelOrder(entry.orderId)}>
+                                    <Glyphicon glyph="remove" title="cancel order" />
+                                  </Button>
+                                ) : undefined }
+                                { (entry.status === "NeedsGas") ? (
+                                  <Button bsSize="xsmall" bsStyle="primary" onClick={() => this.handleClickContinueOrder(entry.orderId)}>
+                                    <Glyphicon glyph="forward" title="continue placing order" />
+                                  </Button>
+                                ) : undefined }
+                                { (entry.status !== "Open" && entry.status !== "NeedsGas" && entry.status !== "Sending") ? (
+                                  <Button bsSize="xsmall" bsStyle="default" onClick={() => this.handleClickHideOrder(entry.orderId)}>
+                                    <Glyphicon glyph="eye-close" title="hide order" />
+                                  </Button>
+                                ) : undefined }
+                              </ButtonToolbar>
+                            </td>
+                          </tr>
+                        )}
+                        {this.state.myOrdersLoaded && Object.keys(this.state.myOrders).length === 0 ? (
+                          <tr key="dummy">
+                            <td colSpan="6">No open or recent orders found for your address.</td>
+                          </tr>
+                        ) : undefined}
+                      </tbody>
+                    </Table>
+                  </div>
+                  <OrderDetails
+                    show={this.state.showOrderInfo}
+                    onClose={this.handleOrderInfoCloseClick}
+                    myOrder={this.state.myOrders[this.state.orderInfoOrderId]} 
+                    pairInfo={this.state.pairInfo}
+                    chosenSupportedNetworkName={this.state.bridgeStatus.chosenSupportedNetworkName}
+                    clock={this.state.clock} />
+                </Col>
+              </Row>
+
+              <Row>
+                <Col md={12}>
+                  <h5>
+                      Market Trades
+                    {this.state.marketTradesLoaded ? undefined : (
+                      <Spinner name="line-scale" color="purple"/>
+                    )}
+                  </h5>
+                  <div className="capped-table">
+                    <Table striped bordered condensed hover>
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>Price</th>
+                          <th>Size ({this.state.pairInfo.base.symbol})</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.keys(this.state.marketTrades)
+                          .sort(this.cmpMarketTradeIds)
+                          .map((marketTradeId) => this.state.marketTrades[marketTradeId])
+                          .map((entry) =>
+                            <tr key={entry.marketTradeId}>
+                              <td>{this.formatEventDate(entry.eventTimestamp)}</td>
+                              <td className={this.chooseClassNameForPrice(entry.makerPrice)}>{entry.makerPrice}</td>
+                              <td>{entry.executedBase}</td>
+                            </tr>
+                          )}
+                        {this.state.marketTradesLoaded && Object.keys(this.state.marketTrades).length === 0 ? (
+                          <tr key="dummy">
+                            <td colSpan="3">No recent market trades found.</td>
+                          </tr>
+                        ) : undefined}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Col>
+              </Row>
+
             </Col>
           </Row>
         </Grid>
