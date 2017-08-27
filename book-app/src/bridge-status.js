@@ -1,5 +1,5 @@
 import React from "react";
-import { Well, Panel, Row, Col, Glyphicon } from "react-bootstrap";
+import { Panel, Row, Col } from "react-bootstrap";
 
 import metamaskLogo from "./metamask.png";
 import mistLogo from "./mist.png";

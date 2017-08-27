@@ -121,7 +121,7 @@ class Bridge {
       if (!this.initialBlockNumber) {
         this.initialBlockNumber = result;
       }
-      if (result != this.blockNumber) {
+      if (result !== this.blockNumber) {
         this.blockNumber = result;
         this.blockDate = new Date();
       }
