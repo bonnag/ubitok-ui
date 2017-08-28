@@ -55,8 +55,14 @@ class DemoBridge {
     this._rawHistoricMarketEvents = undefined;
     
     // give user some play money
-    this.rx.depositBaseForTesting(this.chosenAccount, UbiTokTypes.encodeBaseAmount("1000"));
-    this.rx.depositCntrForTesting(this.chosenAccount, UbiTokTypes.encodeCntrAmount("200"));
+    this.rx.setBalancesForTesting(this.chosenAccount,
+      UbiTokTypes.encodeBaseAmount("1000"),
+      UbiTokTypes.encodeCntrAmount("200"),
+      UbiTokTypes.encodeCntrAmount("0"),
+      UbiTokTypes.encodeBaseAmount("3000"),
+      UbiTokTypes.encodeCntrAmount("600"),
+      UbiTokTypes.encodeCntrAmount("0")
+    );
 
     window.setInterval(this._processSendingQueue, 3000);
     window.setInterval(this._processMiningQueue, 5000);
@@ -250,7 +256,10 @@ class DemoBridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitDepositBaseApprove = (fmtAmount, callback) => {
-    // TODO
+    let gasAmount = 250000;
+    this._queueTxn(() => {
+      // TODO
+    }, {gas: gasAmount}, callback);
   }
 
   // Submit a base deposit collection.
