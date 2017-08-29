@@ -7,6 +7,10 @@ import DemoActorStacker from "./demo-actor-stacker.js"
 
 let BigNumber = UbiTokTypes.BigNumber;
 
+// For demo purposes, this bridge doesn't really talk to the Ethereum network -
+// instead it runs its own reference exchange and pretends to mine blocks.
+//
+
 class DemoBridge {
 
   // bookInfo and targetNetworkInfo are as in UbiBooks ...
@@ -90,23 +94,27 @@ class DemoBridge {
   _processMiningQueue = (maybeBlockDate) => {
     this.blockNumber++;
     this.blockDate = maybeBlockDate ? maybeBlockDate : new Date();
-    let errors = [];
+    let delayedErrors = [];
     for (let txn of this.miningQueue) {
+      let txnError = undefined;
       try {
         txn.invokeFn();
       } catch (e) {
-        // TODO - txn failures
-        errors.push(e);
+        txnError = e;
       }
       try {
-        txn.callback(undefined, {event:"Mined"});
+        if (txnError) {
+          txn.callback(undefined, {event:"FailedTxn", jsError: txnError});
+        } else {
+          txn.callback(undefined, {event:"Mined"});
+        }
       } catch (e) {
-        // TODO - should be TxnFailed now?
-        errors.push(e);
+        // want to clear the queue before throwing
+        delayedErrors.push(e);
       }
     }
     this.miningQueue = [];
-    for (let delayedError of errors) {
+    for (let delayedError of delayedErrors) {
       throw delayedError;
     }
     let events = this.rx.collectEvents();
@@ -258,7 +266,7 @@ class DemoBridge {
   submitDepositBaseApprove = (fmtAmount, callback) => {
     let gasAmount = 250000;
     this._queueTxn(() => {
-      // TODO
+      this.rx.baseTokenApprove(this.chosenAccount, UbiTokTypes.encodeBaseAmount(fmtAmount));
     }, {gas: gasAmount}, callback);
   }
 
@@ -266,28 +274,70 @@ class DemoBridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitDepositBaseCollect = (callback) => {
-    // TODO
+    let gasAmount = 250000;
+    this._queueTxn(() => {
+      this.rx.transferFromBase(this.chosenAccount);
+    }, {gas: gasAmount}, callback);
   }
 
   // Submit a base withdrawal.
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitWithdrawBaseTransfer = (fmtAmount, callback) => {
-    // TODO
+    let gasAmount = 250000;
+    this._queueTxn(() => {
+      this.rx.transferBase(this.chosenAccount, UbiTokTypes.encodeBaseAmount(fmtAmount));
+    }, {gas: gasAmount}, callback);
   }
 
   // Submit a counter deposit for given friendly amount.
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitDepositCntr = (fmtAmount, callback) => {
-    // TODO
+    let gasAmount = 250000;
+    this._queueTxn(() => {
+      this.rx.depositCntr(this.chosenAccount, UbiTokTypes.encodeCntrAmount(fmtAmount));
+    }, {gas: gasAmount}, callback);
   }
 
   // Submit a counter withdrawal for given friendly amount.
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitWithdrawCntr = (fmtAmount, callback) => {
-    // TODO
+    let gasAmount = 250000;
+    this._queueTxn(() => {
+      this.rx.withdrawCntr(this.chosenAccount, UbiTokTypes.encodeCntrAmount(fmtAmount));
+    }, {gas: gasAmount}, callback);
+  }
+  
+  // Submit a reward deposit approval for given friendly reward amount.
+  // Callback fn should take (error, event) - see TransactionWatcher.
+  // Returns nothing useful.
+  submitDepositRwrdApprove = (fmtAmount, callback) => {
+    let gasAmount = 250000;
+    this._queueTxn(() => {
+      this.rx.rwrdTokenApprove(this.chosenAccount, UbiTokTypes.encodeRwrdAmount(fmtAmount));
+    }, {gas: gasAmount}, callback);
+  }
+
+  // Submit a reward deposit collection.
+  // Callback fn should take (error, event) - see TransactionWatcher.
+  // Returns nothing useful.
+  submitDepositRwrdCollect = (callback) => {
+    let gasAmount = 250000;
+    this._queueTxn(() => {
+      this.rx.transferFromRwrd(this.chosenAccount);
+    }, {gas: gasAmount}, callback);
+  }
+
+  // Submit a reward withdrawal.
+  // Callback fn should take (error, event) - see TransactionWatcher.
+  // Returns nothing useful.
+  submitWithdrawRwrdTransfer = (fmtAmount, callback) => {
+    let gasAmount = 250000;
+    this._queueTxn(() => {
+      this.rx.transferRwrd(this.chosenAccount, UbiTokTypes.encodeRwrdAmount(fmtAmount));
+    }, {gas: gasAmount}, callback);
   }
   
   // Used to build a snapshot of the order book.
