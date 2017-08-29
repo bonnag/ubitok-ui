@@ -362,6 +362,21 @@ class App extends Component {
     }
   }
 
+  getBookPadding = (side) => {
+    let padding = [];
+    for (let i = this.state.book[side].length; i < 6; i++) {
+      padding.push(["pad" + i, ""]);
+    }
+    if (this.state.book[side].length === 0) {
+      if (this.state.book.isComplete) {
+        padding[0][1] = "No orders found - fancy making a market?";
+      } else {
+        padding[0][1] = "Loading order book ...";
+      }
+    }
+    return padding;
+  }
+
   handleHistoricMarketEvents = (error, events) => {
     if (error) {
       this.panic(error);
@@ -1093,12 +1108,12 @@ class App extends Component {
                             <td>{entry[2]}</td>
                           </tr>
                         )}
-                        {this.state.book.isComplete && this.state.book.asks.length === 0 ? (
-                          <tr key="dummy">
-                            <td colSpan="3">No sell orders found - fancy making a market ...?</td>
+                        {this.getBookPadding('asks').map((entry) => 
+                          <tr key={entry[0]}>
+                            <td colSpan="3">{entry[1]}&nbsp;</td>
                           </tr>
-                        ) : undefined}
-                      </tbody>
+                        )}
+                    </tbody>
                     </Table>
                   </div>
                 </Col>
@@ -1120,11 +1135,11 @@ class App extends Component {
                             <td>{entry[2]}</td>
                           </tr>
                         )}
-                        {this.state.book.isComplete && this.state.book.bids.length === 0 ? (
-                          <tr key="dummy">
-                            <td colSpan="3">No buy orders found - fancy making a market ...?</td>
+                        {this.getBookPadding('bids').map((entry) => 
+                          <tr key={entry[0]}>
+                            <td colSpan="3">{entry[1]}&nbsp;</td>
                           </tr>
-                        ) : undefined}
+                        )}
                       </tbody>
                     </Table>
                   </div>

@@ -169,6 +169,10 @@ class BookBuilder {
           entry.count = 0;
           entry.depth = this._bigZero;
         }
+        // it would be nice to delete when count = 0 but we need to
+        // remember the blockNumber to avoid duplicates, if memory
+        // usage gets too bad we can always add purging (but there's
+        // only 10,800 different prices possible so maybe no need).
       }
     }
     this._internalBook.set(event.pricePacked, entry);
