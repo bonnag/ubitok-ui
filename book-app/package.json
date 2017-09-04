@@ -9,21 +9,18 @@
   "homepage": "https://ubitok.io/exchange/DEMO-ETH/",
   "dependencies": {
     "eslint": "^4.4.1",
+    "eslint-plugin-react": "^7.2.0",
     "immutability-helper": "^2.2.2",
     "moment": "^2.18.1",
     "random-js": "^1.0.8",
     "react": "^15.6.1",
     "react-bootstrap": "^0.31.0",
     "react-dom": "^15.6.1",
+    "react-scripts": "1.0.7",
     "react-spinkit": "^3.0.0",
     "ubi-bootstrap": "file:../ubi-bootstrap",
     "ubitok-jslib": "file:../../ubitok-jslib",
     "web3": "^0.20.1"
-  },
-  "devDependencies": {
-    "eslint": "^4.4.1",
-    "eslint-plugin-react": "^7.2.0",
-    "react-scripts": "1.0.7"
   },
   "scripts": {
     "start": "react-scripts start",

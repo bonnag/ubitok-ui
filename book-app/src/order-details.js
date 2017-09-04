@@ -18,6 +18,10 @@ class OrderDetails extends React.Component {
   formatCntr = (rawAmount) => {
     return UbiTokTypes.decodeCntrAmount(rawAmount);
   }
+
+  formatRwrd = (rawAmount) => {
+    return UbiTokTypes.decodeRwrdAmount(rawAmount);
+  }
   
   chooseClassNameForPrice = (price) => {
     if (price.startsWith("Buy")) {
@@ -94,14 +98,18 @@ class OrderDetails extends React.Component {
                 { (this.props.myOrder.price.startsWith("Buy")) ? (
                   <tr>
                     <td>Fees ({this.props.pairInfo.base.symbol})</td>
-                    <td>{this.formatCntr(this.props.myOrder.rawFees)}</td>
+                    <td>{this.formatBase(this.props.myOrder.rawFeesBaseOrCntr)}</td>
                   </tr>
                 ) : (
                   <tr>
                     <td>Fees ({this.props.pairInfo.cntr.symbol})</td>
-                    <td>{this.formatCntr(this.props.myOrder.rawFees)}</td>
+                    <td>{this.formatCntr(this.props.myOrder.rawFeesBaseOrCntr)}</td>
                   </tr>
                 ) }
+                <tr>
+                    <td>Fees ({this.props.pairInfo.rwrd.symbol})</td>
+                    <td>{this.formatRwrd(this.props.myOrder.rawFeesRwrd)}</td>
+                  </tr>
                 <tr>
                   <td>Status</td>
                   <td>{this.props.myOrder.status}</td>

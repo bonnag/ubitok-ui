@@ -434,7 +434,7 @@ class DemoBridge {
         reasonCode: refOrder.reasonCode,
         rawExecutedBase: refOrder.executedBase,
         rawExecutedCntr: refOrder.executedCntr,
-        rawFees: refOrder.fees
+        rawFeesBaseOrCntr: refOrder.feesBaseOrCntr,
       };
       callback(undefined, fmtOrder);
     });

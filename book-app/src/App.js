@@ -530,7 +530,8 @@ class App extends Component {
       reasonCode: "None",
       rawExecutedBase: new BigNumber(0),
       rawExecutedCntr: new BigNumber(0),
-      rawFees: new BigNumber(0),
+      rawFeesBaseOrCntr: new BigNumber(0),
+      rawFeesRwrd: new BigNumber(0),
       modifyInProgress: undefined,
       txnHash: undefined
     };
