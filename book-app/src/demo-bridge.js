@@ -435,6 +435,7 @@ class DemoBridge {
         rawExecutedBase: refOrder.executedBase,
         rawExecutedCntr: refOrder.executedCntr,
         rawFeesBaseOrCntr: refOrder.feesBaseOrCntr,
+        rawFeesRwrd: refOrder.feesRwrd
       };
       callback(undefined, fmtOrder);
     });
