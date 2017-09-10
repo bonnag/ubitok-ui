@@ -20,10 +20,12 @@
 
 .buyPrice {
   color: #208020;
+  cursor: copy;
 }
 
 .sellPrice {
   color: #900020;
+  cursor: copy;
 }
 
 #funds-table {

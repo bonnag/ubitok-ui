@@ -18,6 +18,7 @@ import BridgeStatusNav from "./bridge-status-nav.js";
 import CreateOrder from "./create-order.js";
 import SendingButton from "./sending-button.js";
 import EthTxnLink from "./eth-txn-link.js";
+import PriceCell from "./price-cell.js";
 import OrderDetails from "./order-details.js";
 import DemoHelp from "./demo-help.js";
 import BookInfo from "./book-info.js";
@@ -25,9 +26,11 @@ import BookInfo from "./book-info.js";
 
 import "./App.css";
 
+import MoneyAmount from "./money-amount.js";
 import Bridge from "./bridge.js";
 import BookBuilder from './book-builder.js';
 import DemoBridge from "./demo-bridge.js";
+import EventEmitter from "./event-emitter.js";
 import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
 import UbiBooks from "ubitok-jslib/ubi-books.js";
 
@@ -48,6 +51,8 @@ class App extends Component {
     this.lastBridgeStatus = this.bridge.getInitialStatus();
 
     this.bookBuilder = new BookBuilder(this.bridge, this.handleBookUpdate);
+
+    this.priceClickEventEmitter = new EventEmitter();
     
     this.state = {
 
@@ -290,16 +295,6 @@ class App extends Component {
 
   formatCntr = (rawAmount) => {
     return UbiTokTypes.decodeCntrAmount(rawAmount);
-  }
-
-  chooseClassNameForPrice = (price) => {
-    if (price.startsWith("Buy")) {
-      return "buyPrice";
-    } else if (price.startsWith("Sell")) {
-      return "sellPrice";
-    } else {
-      return "invalidPrice";
-    }
   }
 
   formatEventDate = (eventDate) => {
@@ -781,6 +776,10 @@ class App extends Component {
       });
     }
   }
+
+  handlePriceCellClick = (price) => {
+    this.priceClickEventEmitter.emit(price);
+  }
   
   render() {
     return (
@@ -833,7 +832,7 @@ class App extends Component {
                     <td colSpan="2">
                       <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip("Your " + this.state.pairInfo.base.name + " funds held in the contract. Can be sold for " + this.state.pairInfo.cntr.symbol + " or withdrawn.")}>
                         <span>
-                          {this.state.balances.exchangeBase}
+                          <MoneyAmount displayAmount={this.state.balances.exchangeBase}/>
                             &nbsp;
                           {this.state.pairInfo.base.symbol}
                         </span>
@@ -848,7 +847,7 @@ class App extends Component {
                     <td colSpan="2">
                       <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip("Your " + this.state.pairInfo.cntr.name + " funds held in the contract. Can be used to buy " + this.state.pairInfo.base.symbol + " or withdrawn.")}>
                         <span>
-                          {this.state.balances.exchangeCntr}
+                          <MoneyAmount displayAmount={this.state.balances.exchangeCntr}/>
                             &nbsp;
                           {this.state.pairInfo.cntr.symbol}
                         </span>
@@ -863,7 +862,7 @@ class App extends Component {
                     <td colSpan="2">
                       <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip("Your " + this.state.pairInfo.rwrd.name + " funds held in the contract. Can be used to pay fees or withdrawn.")}>
                         <span>
-                          {this.state.balances.exchangeRwrd}
+                          <MoneyAmount displayAmount={this.state.balances.exchangeRwrd}/>
                             &nbsp;
                           {this.state.pairInfo.rwrd.symbol}
                         </span>
@@ -1071,10 +1070,10 @@ class App extends Component {
               {/* need tabs inline here - https://github.com/react-bootstrap/react-bootstrap/issues/1936 */}
               <Tabs activeKey={this.state.createOrderDirection} onSelect={this.handleCreateOrderDirectionSelect} id="create-order-direction">
                 <Tab eventKey="Buy" title={"BUY " + this.state.pairInfo.base.symbol}>
-                  <CreateOrder direction="Buy" pairInfo={this.state.pairInfo} balances={this.state.balances} bridgeStatus={this.state.bridgeStatus} onPlace={this.handlePlaceOrder} />
+                  <CreateOrder priceClickEventEmitter={this.priceClickEventEmitter} direction="Buy" pairInfo={this.state.pairInfo} balances={this.state.balances} bridgeStatus={this.state.bridgeStatus} onPlace={this.handlePlaceOrder} />
                 </Tab>
                 <Tab eventKey="Sell" title={"SELL " + this.state.pairInfo.base.symbol}>
-                  <CreateOrder direction="Sell" pairInfo={this.state.pairInfo} balances={this.state.balances} bridgeStatus={this.state.bridgeStatus} onPlace={this.handlePlaceOrder} />
+                  <CreateOrder priceClickEventEmitter={this.priceClickEventEmitter} direction="Sell" pairInfo={this.state.pairInfo} balances={this.state.balances} bridgeStatus={this.state.bridgeStatus} onPlace={this.handlePlaceOrder} />
                 </Tab>
               </Tabs>
               
@@ -1104,8 +1103,8 @@ class App extends Component {
                       <tbody>
                         {this.state.book.asks.map((entry) =>
                           <tr key={entry[0]}>
-                            <td className={this.chooseClassNameForPrice(entry[0])}>{entry[0]}</td>
-                            <td>{entry[1]}</td>
+                            <PriceCell price={entry[0]} onClick={this.handlePriceCellClick}/>
+                            <td><MoneyAmount displayAmount={entry[1]}/></td>
                             <td>{entry[2]}</td>
                           </tr>
                         )}
@@ -1131,8 +1130,8 @@ class App extends Component {
                       <tbody>
                         {this.state.book.bids.map((entry) =>
                           <tr key={entry[0]}>
-                            <td className={this.chooseClassNameForPrice(entry[0])}>{entry[0]}</td>
-                            <td>{entry[1]}</td>
+                            <PriceCell price={entry[0]} onClick={this.handlePriceCellClick}/>
+                            <td><MoneyAmount displayAmount={entry[1]}/></td>
                             <td>{entry[2]}</td>
                           </tr>
                         )}
@@ -1171,7 +1170,7 @@ class App extends Component {
                         {this.getMySortedOrders().map((entry) =>
                           <tr key={entry.orderId}>
                             <td>{this.formatCreationDateOf(entry.orderId)}</td>
-                            <td className={this.chooseClassNameForPrice(entry.price)}>{entry.price}</td>
+                            <PriceCell price={entry.price} onClick={this.handlePriceCellClick}/>
                             <td>{entry.sizeBase}</td>
                             <td>
                               {entry.status + ((entry.modifyInProgress !== undefined) ? " (" + entry.modifyInProgress + ")" : "")}
@@ -1179,7 +1178,7 @@ class App extends Component {
                                 <Spinner name="line-scale" color="purple"/>
                               ) : undefined }
                             </td>
-                            <td>{this.formatBase(entry.rawExecutedBase)}</td>
+                            <td><MoneyAmount displayAmount={this.formatBase(entry.rawExecutedBase)}/></td>
                             <td>
                               <ButtonToolbar>
                                 <Button bsSize="xsmall" bsStyle="info" onClick={() => this.handleClickMoreInfo(entry.orderId)}>
@@ -1246,8 +1245,8 @@ class App extends Component {
                           .map((entry) =>
                             <tr key={entry.marketTradeId}>
                               <td>{this.formatEventDate(entry.eventTimestamp)}</td>
-                              <td className={this.chooseClassNameForPrice(entry.makerPrice)}>{entry.makerPrice}</td>
-                              <td>{entry.executedBase}</td>
+                              <PriceCell price={entry.makerPrice} onClick={this.handlePriceCellClick} />
+                              <td><MoneyAmount displayAmount={entry.executedBase}/></td>
                             </tr>
                           )}
                         {this.state.marketTradesLoaded && Object.keys(this.state.marketTrades).length === 0 ? (

@@ -24,6 +24,7 @@ class CreateOrder extends React.Component {
       "terms": "GTCNoGasTopup",
       "error": ""
     };
+    this.props.priceClickEventEmitter.subscribe('createOrder' + this.props.direction, this.setPrice);
   }
 
   formatBase = (rawAmount) => {
@@ -223,6 +224,15 @@ class CreateOrder extends React.Component {
     this.setState((prevState, props) => {
       return {
         error: ""
+      };
+    });
+  }
+
+  // used for populating from order book
+  setPrice = (price) => {
+    this.setState((prevState, props) => {
+      return {
+        price: price
       };
     });
   }
