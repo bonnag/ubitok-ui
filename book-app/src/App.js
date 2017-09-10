@@ -15,6 +15,7 @@ import TestLogo from "./test-logo.svg";
 
 import BridgeStatus from "./bridge-status.js";
 import BridgeStatusNav from "./bridge-status-nav.js";
+import BridgeSelect from "./bridge-select.js";
 import CreateOrder from "./create-order.js";
 import SendingButton from "./sending-button.js";
 import EthTxnLink from "./eth-txn-link.js";
@@ -205,7 +206,8 @@ class App extends Component {
 
        // TODO - use a cookie to stop showing it every time
       "showDemoHelp": networkInfo.liveness === "DEMO",
-
+      "showBridgeSelect": networkInfo.liveness !== "DEMO",
+      
       "showBookInfo": false
     };
     this.bridge.subscribeStatus(this.handleStatusUpdate);
@@ -780,6 +782,15 @@ class App extends Component {
   handlePriceCellClick = (price) => {
     this.priceClickEventEmitter.emit(price);
   }
+
+  handleBridgeSelectDone = (bridgeMode, manualEthAddress) => {
+    // TODO - set bridgeMode etc, let bridge start connecting
+    this.setState((prevState, props) => {
+      return {
+        showBridgeSelect: false
+      };
+    });
+  }
   
   render() {
     return (
@@ -820,6 +831,7 @@ class App extends Component {
             <Col md={12}>
               <BridgeStatus bridgeStatus={this.state.bridgeStatus} />
               <DemoHelp show={this.state.showDemoHelp} onHide={this.handleDemoHelpHide}/>
+              <BridgeSelect show={this.state.showBridgeSelect} onDone={this.handleBridgeSelectDone}/>
               <BookInfo pairInfo={this.state.pairInfo} show={this.state.showBookInfo} onHide={this.handleBookInfoHide}/>
             </Col>
           </Row>
