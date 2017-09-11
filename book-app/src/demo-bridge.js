@@ -173,6 +173,7 @@ class DemoBridge {
   // TODO - document status format.
   getInitialStatus = () => {
     return {
+      bridgeMode: "metamask",
       web3Present: false,
       chosenSupportedNetworkName: undefined,
       targetNetworkName: this.targetNetworkInfo.name,
@@ -181,8 +182,11 @@ class DemoBridge {
       chosenAccount: undefined,
       accountLocked: false,
       accountChanged: false,
-      canMakePublicCalls: false,
-      canMakeAccountCalls: false,
+      canReadBook: false,
+      mightReadAccountOrders: true,
+      canReadAccountOrders: false,
+      mightSendTransactions: true,
+      canSendTransactions: false,
       withinGracePeriod: true,
       blockInfo: ""
     };
@@ -203,6 +207,7 @@ class DemoBridge {
       blockAge = Math.floor(millis / 1000);
     }
     return {
+      bridgeMode: "metamask",
       web3Present: true,
       unsupportedNetwork: false,
       chosenSupportedNetworkName: this.targetNetworkInfo.name,
@@ -211,8 +216,11 @@ class DemoBridge {
       chosenAccount: this.chosenAccount,
       accountLocked: false,
       accountChanged: false,
-      canMakePublicCalls: true,
-      canMakeAccountCalls: true,
+      canReadBook: true,
+      mightReadAccountOrders: true,
+      canReadAccountOrders: true,
+      mightSendTransactions: true,
+      canSendTransactions: true,
       withinGracePeriod: false,
       blockInfo: this.blockNumber + " (" + blockAge + "s ago)"
     };
@@ -227,16 +235,22 @@ class DemoBridge {
 
   // Check if the bridge currently appears able to make public (constant, no account needed) calls.
   // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
-  checkCanMakePublicCalls = (callbackIfNot) => {
+  checkCanReadBook = (callbackIfNot) => {
     return true;
   }
 
   // Check if the bridge currently appears able to make account-related calls.
   // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
-  checkCanMakeAccountCalls = (callbackIfNot) => {
+  checkCanReadAccountOrders = (callbackIfNot) => {
     return true;
   }
 
+  // Check if the bridge currently appears able to make account-related calls.
+  // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
+  checkCanSendTransactions = (callbackIfNot) => {
+    return true;
+  }
+  
   // Request callback with client's balances (if available).
   // Callback fn should take (error, result) where result is an object
   // containing zero or more of the following formatted balances:

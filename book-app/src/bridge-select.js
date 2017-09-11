@@ -29,13 +29,14 @@ class BridgeSelect extends React.Component {
   }
 
   handleDone = () => {
+    // TODO - yuk - ugly window.alert dialogs
     if (!this.state.selectedKey) {
-      alert("Please choose one option first ...");
+      alert("Please choose one option for connecting to Ethereum first ...");
       return;
     }
-    let validation = this.getMyEthAddressValidationResult[0];
-    if (validation === "error" || validation === "warning") {
-      alert("Please fix the problem with the chosen option first ... maybe leave the address blank for now?");
+    let validation = this.getMyEthAddressValidationResult(true);
+    if (validation[0] === "error") {
+      alert("Please fix the problem with the chosen option first:\n" + validation[1]);
       return;
     }
     this.props.onDone(this.state.selectedKey, this.state.myEthAddress.trim());
@@ -50,22 +51,22 @@ class BridgeSelect extends React.Component {
     });
   }
 
-  getMyEthAddressValidationResult = () => {
+  getMyEthAddressValidationResult = (strict) => {
     if (this.state.selectedKey !== "manual") {
       return [undefined, undefined];
     }
-    let possibleRe = /(0x)?[0-9A-Fa-f]{0,40}/;
     let candidate = this.state.myEthAddress.trim();
-    if (candidate === "") {
-      return [undefined, undefined];
-    }
     if (candidate.match(/^(0x)?[0-9A-Fa-f]{40}$/)) {
       return ["success", undefined];
     }
     if (candidate.match(/^(0x)?[0-9A-Fa-f]{0,39}$/)) {
-      return ["warning", undefined];
+      if (strict) {
+        return ["error", "No Ethereum address entered."];
+      } else {
+        return ["warning", undefined];
+      }
     }
-    return ["error", "That does not look like a valid Ethereum address (should be digits and letters a to f)"];
+    return ["error", "That does not look like a valid Ethereum address (should be digits and letters a to f)."];
   }
 
   render() {
@@ -91,7 +92,7 @@ class BridgeSelect extends React.Component {
             <NavItem eventKey="manual">
               <img src={ManualImage} style={{float:"left", marginRight:"8px"}} alt=""/>
               Tell me what to send via <b>MyEtherWallet</b> (or other manual client).<br/>
-              If you enter the address you will use, we can show your orders:
+              Enter the address you will use so we can show your balances and orders:
               <FormGroup controlId="bridgeSelectMyEthAddress" validationState={this.getMyEthAddressValidationResult()[0]}>
                 <InputGroup>
                   <InputGroup.Addon>Eth Address</InputGroup.Addon>

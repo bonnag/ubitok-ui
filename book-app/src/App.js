@@ -316,10 +316,10 @@ class App extends Component {
   
   handleStatusUpdate = (error, newBridgeStatus) => {
     let oldStatus = this.lastBridgeStatus;
-    if (!oldStatus.canMakePublicCalls && newBridgeStatus.canMakePublicCalls) {
+    if (!oldStatus.canReadBook && newBridgeStatus.canReadBook) {
       this.readPublicData();
     }
-    if (!oldStatus.canMakeAccountCalls && newBridgeStatus.canMakeAccountCalls) {
+    if (!oldStatus.canReadAccountOrders && newBridgeStatus.canReadAccountOrders) {
       this.readAccountData();
     }
     this.lastBridgeStatus = newBridgeStatus;
@@ -784,7 +784,7 @@ class App extends Component {
   }
 
   handleBridgeSelectDone = (bridgeMode, manualEthAddress) => {
-    // TODO - set bridgeMode etc, let bridge start connecting
+    this.bridge.init(bridgeMode, manualEthAddress);
     this.setState((prevState, props) => {
       return {
         showBridgeSelect: false

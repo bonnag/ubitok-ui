@@ -44,9 +44,12 @@ class CreateOrder extends React.Component {
          this.getCreateOrderProceedsValidationResult() ),
       this.getCreateOrderTermsValidationResult()
     ];
+    // TODO - check if eth too low to pay gas? or do that globally?
     if (individualResults.filter((r) => r[0] === "error").length > 0) {
       return ["error", "Please correct items highlighted (in red) above first."];
-    } else if (!this.props.bridgeStatus.canMakeAccountCalls) {
+    } else if (!this.props.bridgeStatus.mightSendTransactions) {
+      return ["error", "Orders cannot be placed in View Only mode - reload page to connect to Ethereum network again."];
+    } else if (!this.props.bridgeStatus.canSendTransactions) {
       return ["error", "Please check you have an unlocked Ethereum account first."];
     } else {
       return ["success"];

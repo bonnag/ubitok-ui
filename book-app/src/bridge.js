@@ -17,15 +17,18 @@ class Bridge {
     this.blockNumber = undefined;
     this.blockDate = undefined;
     this.statusSubscribers = [];
-    this.startedConnectingAt = new Date();
+    this.startedConnectingAt = undefined;
+    this.bridgeMode = undefined;
+    this.manualEthAddress = "";
 
-    window.setTimeout(this.pollStatus, 1000);
   }
 
   // Used to initialise our page before polling starts.
   // TODO - document status format.
   getInitialStatus = () => {
     return {
+      // bridgeMode is undefined, guest, metamask, or manual
+      bridgeMode: undefined,
       web3Present: false,
       chosenSupportedNetworkName: undefined,
       targetNetworkName: this.targetNetworkInfo.name,
@@ -34,11 +37,24 @@ class Bridge {
       chosenAccount: undefined,
       accountLocked: false,
       accountChanged: false,
-      canMakePublicCalls: false,
-      canMakeAccountCalls: false,
+      canReadBook: false,
+      mightReadAccountOrders: true,
+      canReadAccountOrders: false,
+      mightSendTransactions: true,
+      canSendTransactions: false,
       withinGracePeriod: true,
       blockInfo: ""
     };
+  }
+
+  // bridgeMode is guest, metamask, or manual
+  // in manual mode manualEthAddress is the client's account which they will use
+  // from e.g. MyEtherWallet - we can show their orders + balances even without key.
+  init = (bridgeMode, manualEthAddress) => {
+    this.bridgeMode = bridgeMode;
+    this.manualEthAddress = manualEthAddress;
+    this.startedConnectingAt = new Date();
+    window.setTimeout(this.pollStatus, 1000);
   }
 
   pollStatus = () => {
@@ -49,8 +65,72 @@ class Bridge {
     window.setTimeout(this.pollStatus, 1000);
   }
 
-  // TODO - this is very yucky
   getUpdatedStatus = () => {
+    if (this.bridgeMode === "metamask") {
+      return this.getUpdatedStatusMetaMask();
+    } else if (this.bridgeMode === "manual") {
+      return this.getUpdatedStatusManual();
+    } else if (this.bridgeMode === "guest") {
+      return this.getUpdatedStatusGuest();
+    } else {
+      return this.getInitialStatus();
+    }
+  }
+
+  getUpdatedStatusGuest = () => {
+    // always returns the correct end-point for the target network id ...
+    let endpoint = this._getInfuraEndpoint();
+    if (this.web3 === undefined && endpoint) {
+      this.web3 = new Web3(new Web3.providers.HttpProvider(endpoint));
+    }
+    let web3Present = this.web3 !== undefined && this.web3.hasOwnProperty("version");
+    if (web3Present &&  this.chosenSupportedNetworkId === undefined) {
+      this.chosenSupportedNetworkId = this.targetNetworkInfo.networkId;
+      this.chosenSupportedNetworkName = this.targetNetworkInfo.name;
+      const bookContractAbiArray = this.bookInfo.bookAbiArray;
+      let BookContract = this.web3.eth.contract(bookContractAbiArray);
+      this.bookContract = BookContract.at(this.bookInfo.bookAddress);
+      const baseTokenAbiArray = this.bookInfo.base.abiArray;
+      let BaseTokenContract = this.web3.eth.contract(baseTokenAbiArray);
+      this.baseToken = BaseTokenContract.at(this.bookInfo.base.address);
+      const rwrdTokenAbiArray = this.bookInfo.rwrd.abiArray;
+      let RwrdTokenContract = this.web3.eth.contract(rwrdTokenAbiArray);
+      this.rwrdToken = RwrdTokenContract.at(this.bookInfo.rwrd.address);
+      this.web3.eth.getBlockNumber(this._handleBlockNumber);
+    }
+    let canMakePublicCalls = web3Present && this.initialBlockNumber;
+    let blockInfo = "";
+    if (this.blockNumber && this.blockDate) {
+      let millis = (new Date()).getTime() - this.blockDate.getTime();
+      let blockAge = Math.floor(millis / 1000);
+      blockInfo = this.blockNumber + " (" + blockAge + "s ago)";
+    }
+    return {
+      bridgeMode: this.bridgeMode,
+      web3Present: web3Present,
+      unsupportedNetwork: false,
+      chosenSupportedNetworkName: this.chosenSupportedNetworkName,
+      targetNetworkName: this.targetNetworkInfo.name,
+      networkChanged: false,
+      chosenAccount: undefined,
+      accountLocked: true,
+      accountChanged: false,
+      canReadBook: canMakePublicCalls,
+      mightReadAccountOrders: false,
+      canReadAccountOrders: false,
+      mightSendTransactions: false,
+      canSendTransactions: false,
+      withinGracePeriod: (new Date() - this.startedConnectingAt) < 5000,
+      blockInfo: blockInfo
+    };
+  }
+  
+  getUpdatedStatusManual = () => {
+    throw new Error("not implemented");
+  }
+    
+  getUpdatedStatusMetaMask = () => {
+      // TODO - add support for new ethereum object
     if (this.web3 === undefined && window.web3) {
       console.log("found web3 provider");
       this.web3 = new Web3(window.web3.currentProvider);
@@ -99,6 +179,7 @@ class Bridge {
       blockInfo = this.blockNumber + " (" + blockAge + "s ago)";
     }
     return {
+      bridgeMode: this.bridgeMode,
       web3Present: web3Present,
       unsupportedNetwork: unsupportedNetwork,
       chosenSupportedNetworkName: this.chosenSupportedNetworkName,
@@ -107,13 +188,23 @@ class Bridge {
       chosenAccount: this.chosenAccount,
       accountLocked: accountLocked,
       accountChanged: accountChanged,
-      canMakePublicCalls: canMakePublicCalls,
-      canMakeAccountCalls: canMakePublicCalls && !accountLocked && !accountChanged,
+      canReadBook: canMakePublicCalls,
+      mightReadAccountOrders: true,
+      canReadAccountOrders: canMakePublicCalls && !accountLocked && !accountChanged,
+      mightSendTransactions: true,
+      canSendTransactions: canMakePublicCalls && !accountLocked && !accountChanged,
       withinGracePeriod: (new Date() - this.startedConnectingAt) < 5000,
       blockInfo: blockInfo
     };
   }
 
+  _getInfuraEndpoint = () => {
+    // ok, it's trivial to bypass the obfuscation - but please don't, it's against the T&Cs.
+    let token = decodeURI("%50%69%4E%33%47%64%63%45%39%6E%38%64%73%33%54%6F%46%4D%57%62");
+    // TODO - choose mainnet or ropsten accordingly!
+    return "https://ropsten.infura.io/" + token;
+  }
+  
   // Internal - we need this to help filter events.
   // We don't consider the bridge ready to make calls until we've got it.
   _handleBlockNumber = (error, result) => {
@@ -140,24 +231,34 @@ class Bridge {
 
   // Check if the bridge currently appears able to make public (constant, no account needed) calls.
   // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
-  checkCanMakePublicCalls = (callbackIfNot) => {
+  checkCanReadBook = (callbackIfNot) => {
     let status = this.getUpdatedStatus();
-    if (!status.canMakePublicCalls && callbackIfNot) {
-      window.setTimeout(function () { callbackIfNot(new Error("cannot make public calls: " + status));}, 0);
+    if (!status.canReadBook && callbackIfNot) {
+      window.setTimeout(function () { callbackIfNot(new Error("cannot read book: " + status));}, 0);
     }
-    return status.canMakePublicCalls;
+    return status.canReadBook;
   }
 
   // Check if the bridge currently appears able to make account-related calls.
   // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
-  checkCanMakeAccountCalls = (callbackIfNot) => {
+  checkCanReadAccountOrders = (callbackIfNot) => {
     let status = this.getUpdatedStatus();
-    if (!status.canMakeAccountCalls && callbackIfNot) {
-      window.setTimeout(function () { callbackIfNot(new Error("cannot make account calls: " + status));}, 0);
+    if (!status.canReadAccountOrders && callbackIfNot) {
+      window.setTimeout(function () { callbackIfNot(new Error("cannot read account orders: " + status));}, 0);
     }
-    return status.canMakeAccountCalls;
+    return status.canReadAccountOrders;
   }
 
+  // Check if the bridge currently appears able to make account-related calls.
+  // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
+  checkCanSendTransactions = (callbackIfNot) => {
+    let status = this.getUpdatedStatus();
+    if (!status.canSendTransactions && callbackIfNot) {
+      window.setTimeout(function () { callbackIfNot(new Error("cannot send transactions: " + status));}, 0);
+    }
+    return status.canSendTransactions;
+  }
+  
   // Internal. Can fail if web3 not ready / locked.
   _getOurAddress = () => {
     return this.web3.eth.accounts[0];
@@ -178,7 +279,7 @@ class Bridge {
   // it should merge the results with any balances it already has.
   // Returns nothing useful.
   getBalances = (callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanReadAccountOrders(callback)) {
       return;
     }
     let wrapperCallback = (error, result) => {
@@ -209,7 +310,7 @@ class Bridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitDepositBaseApprove = (fmtAmount, callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanSendTransactions(callback)) {
       return;
     }
     // use fixed amount so can detect failures by max consumption
@@ -228,7 +329,7 @@ class Bridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitDepositBaseCollect = (callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanSendTransactions(callback)) {
       return;
     }
     // use fixed amount so can detect failures by max consumption
@@ -244,7 +345,7 @@ class Bridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitWithdrawBaseTransfer = (fmtAmount, callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanSendTransactions(callback)) {
       return;
     }
     // use fixed amount so can detect failures by max consumption
@@ -262,7 +363,7 @@ class Bridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitDepositCntr = (fmtAmount, callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanSendTransactions(callback)) {
       return;
     }
     // use fixed amount so can detect failures by max consumption
@@ -281,7 +382,7 @@ class Bridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitWithdrawCntr = (fmtAmount, callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanSendTransactions(callback)) {
       return;
     }
     // use fixed amount so can detect failures by max consumption
@@ -298,6 +399,9 @@ class Bridge {
   // Thin wrapper over the contract walkBook - it's quite hard to explain (TODO)
   // Returns nothing useful.
   walkBook = (fromPricePacked, callback) => {
+    if (!this.checkCanReadBook(callback)) {
+      return;
+    }
     this.bookContract.walkBook.call(fromPricePacked, callback);
   }
 
@@ -308,7 +412,7 @@ class Bridge {
   // Skips closed orders if they're too old.
   // Returns nothing useful.
   walkMyOrders = (maybeLastOrderId, callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanReadAccountOrders(callback)) {
       return;
     }
     let now = new Date();
@@ -330,7 +434,7 @@ class Bridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitCreateOrder = (fmtOrderId, fmtPrice, fmtSizeBase, fmtTerms, maxMatches, callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanSendTransactions(callback)) {
       return;
     }
     // probably too pessimistic, can reduce once analysed worst-case properly
@@ -351,7 +455,7 @@ class Bridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitContinueOrder = (fmtOrderId, maxMatches, callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanSendTransactions(callback)) {
       return;
     }
     // probably too pessimistic, can reduce once analysed worst-case properly
@@ -369,7 +473,7 @@ class Bridge {
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
   submitCancelOrder = (fmtOrderId, callback) => {
-    if (!this.checkCanMakeAccountCalls(callback)) {
+    if (!this.checkCanSendTransactions(callback)) {
       return;
     }
     // specify fixed amount since:
@@ -388,6 +492,9 @@ class Bridge {
   // Callback fn should take (error, result) where result is as UbiTokTypes.decodeOrderState.
   // Returns nothing useful.
   getOrderState = (fmtOrderId, callback) => {
+    if (!this.checkCanReadBook(callback)) {
+      return;
+    }
     let rawOrderId = UbiTokTypes.encodeOrderId(fmtOrderId).valueOf();
     this.bookContract.getOrderState.call(rawOrderId, (error, result) => {
       if (error) {
@@ -402,7 +509,7 @@ class Bridge {
   // Callback fn should take (error, result) where result is as UbiTokTypes.decodeMarketOrderEvent.
   // Returns nothing useful.
   subscribeFutureMarketEvents = (callback) => {
-    if (!this.checkCanMakePublicCalls(callback)) {
+    if (!this.checkCanReadBook(callback)) {
       return;
     }
     var filter = this.bookContract.MarketOrderEvent();
@@ -419,7 +526,7 @@ class Bridge {
   // elements as returned by UbiTokTypes.decodeMarketOrderEvent.
   // Returns nothing useful.
   getHistoricMarketEvents = (callback) => {
-    if (!this.checkCanMakePublicCalls(callback)) {
+    if (!this.checkCanReadBook(callback)) {
       return;
     }
     var approxBlocksPerHour = 180;
@@ -450,6 +557,7 @@ class Bridge {
 // But it can only return FailedTxn if you give it a "optionalGasFail"
 // value - if the txn uses that much gas (or more) it assumes it has failed.
 // TODO - is there really no better way to detect a bad transaction?
+// TODO - how about for manual bridge mode where user sends via MEW?
 //
 class TransactionWatcher {
 
