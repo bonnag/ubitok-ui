@@ -4,6 +4,10 @@ import { Panel, Row, Col } from "react-bootstrap";
 import metamaskLogo from "./metamask.png";
 import mistLogo from "./mist.png";
 
+import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
+let BigNumber = UbiTokTypes.BigNumber;
+
+
 class BridgeStatus extends React.Component {
 
   render = () => {
@@ -66,6 +70,12 @@ class BridgeStatus extends React.Component {
         <Panel header="Unknown Ethereum Connection Problem" bsStyle="danger">
           <p>Some unusual problem has occurred preventing UbiTok.io connecting to the Ethereum Network.</p>
           <p>Try reloading this page, or contact help@ubitok.io with details of the problem.</p>
+        </Panel>
+      ) : (this.props.ownEthBalance && new BigNumber(this.props.ownEthBalance).lt("0.005")) ? (
+        <Panel header="Low Ethereum Balance" bsStyle="danger">
+          <p>Your Ethereum account may not have enough ETH to pay for "gas" fees.</p>
+          <p>Gas fees are needed to send Ethereum transactions, such as when placing orders or making payments.</p>
+          <p>Consider topping up your {this.props.bridgeStatus.chosenAccount} account with more Ether (<i>not</i> your book contract balance).</p>
         </Panel>
       ) : undefined
       }</div>

@@ -213,6 +213,8 @@ class App extends Component {
        // TODO - use a cookie to stop showing it every time
       "showDemoHelp": networkInfo.liveness === "DEMO",
 
+      // how to connect to network - show, mode, manualEthAddress
+
       "bridgeSelect": this.getInitialBridgeSelect(networkInfo),
       
       // pop-up to view min order size etc.
@@ -227,6 +229,8 @@ class App extends Component {
       // amountToSend="1.2345"
       // gasLimit="600000"
       // data="0xABCDABCDABCBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD"
+      // TODO - how to route callback properly?
+
       "manualTxnRequest": {
         show: false,
         goalDesc: "",
@@ -240,6 +244,7 @@ class App extends Component {
 
     };
     this.bridge.subscribeStatus(this.handleStatusUpdate);
+    // TODO - perhaps timeout better in-case really really slow ..
     window.setInterval(this.pollBalances, 3000);
     window.setInterval(this.updateClock, 1000);
     window.setInterval(this.purgeExcessData, 30000);
@@ -930,7 +935,7 @@ class App extends Component {
           </Row>
           <Row>
             <Col md={12}>
-              <BridgeStatus bridgeStatus={this.state.bridgeStatus} />
+              <BridgeStatus bridgeStatus={this.state.bridgeStatus} ownEthBalance={this.state.balances.ownCntr} />
               {/* hidden dialogs and magical things */}
               <NotificationContainer/>
               <DemoHelp show={this.state.showDemoHelp} onHide={this.handleDemoHelpHide}/>
