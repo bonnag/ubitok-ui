@@ -28,6 +28,10 @@
   cursor: copy;
 }
 
+.copyOnlyFormControl {
+  cursor: copy;
+}
+
 #funds-table {
   margin-bottom: 0;
 }

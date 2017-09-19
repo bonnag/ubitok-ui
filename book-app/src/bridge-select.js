@@ -9,14 +9,12 @@ import ManualImage from "./bridge-mew-small.png";
 
 class BridgeSelect extends React.Component {
 
-  // TODO - we probably oughta remember this via localstorage/cookie
-
-  // show = true/false, onDone = callback
+  // show = true/false, mode, manualEthAddress, onDone = callback
   constructor(props) {
     super(props);
     this.state = {
-      selectedKey: undefined,
-      myEthAddress: ""
+      selectedKey: this.props.mode,
+      myEthAddress: this.props.manualEthAddress
     };
   }
 
@@ -110,7 +108,7 @@ class BridgeSelect extends React.Component {
           </Nav>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={this.handleDone}>Done</Button>
+          <Button bsStyle="primary" onClick={this.handleDone}>OK, I've chosen</Button>
         </Modal.Footer>
       </Modal>
     );

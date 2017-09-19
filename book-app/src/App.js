@@ -8,6 +8,10 @@ import { Navbar, Nav, NavItem, NavDropdown, MenuItem, Tab, Tabs,
 import update from "immutability-helper";
 import moment from "moment";
 
+import Cookies from "js-cookie";
+
+import { NotificationContainer, NotificationManager } from "react-notifications";
+
 import Spinner from "react-spinkit";
 import UbiLogo from "./ubitok-logo.svg";
 import DemoLogo from "./demo-logo.svg";
@@ -16,6 +20,7 @@ import TestLogo from "./test-logo.svg";
 import BridgeStatus from "./bridge-status.js";
 import BridgeStatusNav from "./bridge-status-nav.js";
 import BridgeSelect from "./bridge-select.js";
+import ManualTxn from "./manual-txn.js";
 import CreateOrder from "./create-order.js";
 import SendingButton from "./sending-button.js";
 import EthTxnLink from "./eth-txn-link.js";
@@ -26,6 +31,7 @@ import BookInfo from "./book-info.js";
 // TODO - move payment forms to seperate components
 
 import "./App.css";
+import "react-notifications/lib/notifications.css";
 
 import MoneyAmount from "./money-amount.js";
 import Bridge from "./bridge.js";
@@ -206,9 +212,32 @@ class App extends Component {
 
        // TODO - use a cookie to stop showing it every time
       "showDemoHelp": networkInfo.liveness === "DEMO",
-      "showBridgeSelect": networkInfo.liveness !== "DEMO",
+
+      "bridgeSelect": this.getInitialBridgeSelect(networkInfo),
       
-      "showBookInfo": false
+      // pop-up to view min order size etc.
+      "showBookInfo": false,
+
+      // used when in "manual" mode for clients who want to send via e.g. MEW
+
+      // goalDesc="place an order to Buy @ 1.23"
+      // appearDesc="your order"
+      // fromAddress="0xFaceBabeCafeBabeCafeBabeCafeBabeCafeBabe"
+      // toAddress="0xDeadBeefDeadBeefDeadBeefDeadBeefDeadBeef"
+      // amountToSend="1.2345"
+      // gasLimit="600000"
+      // data="0xABCDABCDABCBCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD"
+      "manualTxnRequest": {
+        show: false,
+        goalDesc: "",
+        appearDesc: "",
+        fromAddress: "",
+        toAddress: "",
+        amountToSend: "",
+        gasLimit: "",
+        data: ""
+      }
+
     };
     this.bridge.subscribeStatus(this.handleStatusUpdate);
     window.setInterval(this.pollBalances, 3000);
@@ -223,6 +252,32 @@ class App extends Component {
 
   warn = (msg) => {
     console.log(msg);
+  }
+
+  getInitialBridgeSelect = (networkInfo) => {
+    if (networkInfo.liveness === "DEMO") {
+      return { show: false, mode: "metamask", manualEthAddress: "" };
+    }
+    let prefsStr = Cookies.get("UbiTokBridgePrefs");
+    let prefs = undefined;
+    try {
+      prefs = JSON.parse(prefsStr)
+    } catch (e) {
+      // not useful
+    }
+    let mode = "";
+    let manualEthAddress = "";
+    if (prefs && prefs.mode) {
+      mode = prefs.mode;
+    }
+    if (prefs && prefs.manualEthAddress) {
+      manualEthAddress = prefs.manualEthAddress;
+    }
+    return {
+      show: true,
+      mode: mode,
+      manualEthAddress: manualEthAddress
+    }
   }
   
   handleDemoHelpHide = () => {
@@ -784,14 +839,60 @@ class App extends Component {
   }
 
   handleBridgeSelectDone = (bridgeMode, manualEthAddress) => {
-    this.bridge.init(bridgeMode, manualEthAddress);
+    this.bridge.init(bridgeMode, manualEthAddress, this.handleManualTransactionRequest);
     this.setState((prevState, props) => {
       return {
-        showBridgeSelect: false
+        bridgeSelect: update(prevState.bridgeSelect, {
+          show: { $set: false }
+        })
+      };
+    });
+    try {
+      let prefs = {
+        mode: bridgeMode,
+        manualEthAddress: manualEthAddress ? manualEthAddress : ""
+      };
+      let prefsStr = JSON.stringify(prefs);
+      Cookies.set("UbiTokBridgePrefs", prefsStr);
+    } catch (e) {
+      this.warn(e);
+    }
+  }
+  
+  handleManualTransactionRequest = (goalDesc, appearDesc, fromAddress, toAddress, amountToSend, gasLimit, data) => {
+    this.setState((prevState, props) => {
+      return {
+        manualTxnRequest: {
+          show: true,
+          goalDesc: goalDesc,
+          appearDesc: appearDesc,
+          fromAddress: fromAddress,
+          toAddress: toAddress,
+          amountToSend: UbiTokTypes.decodeCntrAmount(amountToSend),
+          gasLimit: gasLimit,
+          data: data
+        }
       };
     });
   }
-  
+
+  handleManualTxnRequestDone = (sent) => {
+    this.setState((prevState, props) => {
+      return {
+        manualTxnRequest: {
+          show: false,
+          goalDesc: "",
+          appearDesc: "",
+          fromAddress: "",
+          toAddress: "",
+          amountToSend: "",
+          gasLimit: "",
+          data: ""
+        }
+      };
+    });
+  }
+
   render() {
     return (
       <div className="App">
@@ -830,9 +931,25 @@ class App extends Component {
           <Row>
             <Col md={12}>
               <BridgeStatus bridgeStatus={this.state.bridgeStatus} />
+              {/* hidden dialogs and magical things */}
+              <NotificationContainer/>
               <DemoHelp show={this.state.showDemoHelp} onHide={this.handleDemoHelpHide}/>
-              <BridgeSelect show={this.state.showBridgeSelect} onDone={this.handleBridgeSelectDone}/>
+              <BridgeSelect
+                show={this.state.bridgeSelect.show}
+                mode={this.state.bridgeSelect.mode}
+                manualEthAddress={this.state.bridgeSelect.manualEthAddress}
+                onDone={this.handleBridgeSelectDone} />
               <BookInfo pairInfo={this.state.pairInfo} show={this.state.showBookInfo} onHide={this.handleBookInfoHide}/>
+              <ManualTxn show={this.state.manualTxnRequest.show}
+                goalDesc={this.state.manualTxnRequest.goalDesc}
+                appearDesc={this.state.manualTxnRequest.appearDesc}
+                fromAddress={this.state.manualTxnRequest.fromAddress}
+                toAddress={this.state.manualTxnRequest.toAddress}
+                amountToSend={this.state.manualTxnRequest.amountToSend}
+                gasLimit={this.state.manualTxnRequest.gasLimit}
+                data={this.state.manualTxnRequest.data}
+                onDone={(sent)=>{this.handleManualTxnRequestDone(sent)}}
+              />
             </Col>
           </Row>
           <Row>
@@ -1162,7 +1279,7 @@ class App extends Component {
                 <Col md={12}>
                   <h5>
                       My Orders
-                    {this.state.myOrdersLoaded ? undefined : (
+                    {this.state.myOrdersLoaded || !this.state.bridgeStatus.mightReadAccountOrders ? undefined : (
                       <Spinner name="line-scale" color="purple"/>
                     )}
                   </h5>
@@ -1215,9 +1332,14 @@ class App extends Component {
                             </td>
                           </tr>
                         )}
-                        {this.state.myOrdersLoaded && Object.keys(this.state.myOrders).length === 0 ? (
+                        { !this.state.bridgeStatus.mightReadAccountOrders ? (
                           <tr key="dummy">
-                            <td colSpan="6">No open or recent orders found for your address.</td>
+                              <td colSpan="6">Not available in guest mode.</td>
+                          </tr>
+                        ) : this.state.myOrdersLoaded && Object.keys(this.state.myOrders).length === 0 ? (
+                          <tr key="dummy">
+                              <td colSpan="6">No open or recent orders found for your address.</td>
+                              <td colSpan="6">Not available in guest mode.</td>
                           </tr>
                         ) : undefined}
                       </tbody>

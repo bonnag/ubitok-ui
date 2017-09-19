@@ -1,5 +1,7 @@
 import Web3 from "web3";
 import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
+import ZeroClientProvider from "web3-provider-engine/zero.js";
+let BigNumber = UbiTokTypes.BigNumber;
 
 class Bridge {
 
@@ -20,10 +22,11 @@ class Bridge {
     this.startedConnectingAt = undefined;
     this.bridgeMode = undefined;
     this.manualEthAddress = "";
-
+    this.futureMarketEventCallbacks = [];
   }
 
   // Used to initialise our page before polling starts.
+  // (and before we even know what mode we're in)
   // TODO - document status format.
   getInitialStatus = () => {
     return {
@@ -48,11 +51,14 @@ class Bridge {
   }
 
   // bridgeMode is guest, metamask, or manual
-  // in manual mode manualEthAddress is the client's account which they will use
-  // from e.g. MyEtherWallet - we can show their orders + balances even without key.
-  init = (bridgeMode, manualEthAddress) => {
+  // For manual only:
+  //   manualEthAddress is the client's account which they will use from e.g. MyEtherWallet -
+  //     we can show their orders + balances even without key.
+  //   handleManualTransactionRequest will tell the user how to send a txn.
+  init = (bridgeMode, manualEthAddress, handleManualTransactionRequest) => {
     this.bridgeMode = bridgeMode;
     this.manualEthAddress = manualEthAddress;
+    this.handleManualTransactionRequest = handleManualTransactionRequest;
     this.startedConnectingAt = new Date();
     window.setTimeout(this.pollStatus, 1000);
   }
@@ -81,7 +87,20 @@ class Bridge {
     // always returns the correct end-point for the target network id ...
     let endpoint = this._getInfuraEndpoint();
     if (this.web3 === undefined && endpoint) {
-      this.web3 = new Web3(new Web3.providers.HttpProvider(endpoint));
+      //this.web3 = new Web3(new Web3.providers.HttpProvider(endpoint));
+      // see if this makes filters work
+      this.web3 = new Web3(
+        ZeroClientProvider({
+          static: {
+            eth_syncing: false,
+            web3_clientVersion: 'ZeroClientProvider',
+          },
+          pollingInterval: 4000,
+          rpcUrl: endpoint,
+          // account mgmt
+          getAccounts: (cb) => cb(null, [])
+        })
+      );
     }
     let web3Present = this.web3 !== undefined && this.web3.hasOwnProperty("version");
     if (web3Present &&  this.chosenSupportedNetworkId === undefined) {
@@ -125,8 +144,67 @@ class Bridge {
     };
   }
   
+  // TODO - copy-pasted from getUpdatedStatusGuest ...
   getUpdatedStatusManual = () => {
-    throw new Error("not implemented");
+    // always returns the correct end-point for the target network id ...
+    let endpoint = this._getInfuraEndpoint();
+    if (this.web3 === undefined && endpoint) {
+      //this.web3 = new Web3(new Web3.providers.HttpProvider(endpoint));
+      // see if this makes filters work
+      this.web3 = new Web3(
+        ZeroClientProvider({
+          static: {
+            eth_syncing: false,
+            web3_clientVersion: 'ZeroClientProvider',
+          },
+          pollingInterval: 4000,
+          rpcUrl: endpoint,
+          // account mgmt
+          getAccounts: (cb) => cb(null, [])
+        })
+      );
+    }
+    let web3Present = this.web3 !== undefined && this.web3.hasOwnProperty("version");
+    if (web3Present &&  this.chosenSupportedNetworkId === undefined) {
+      this.chosenSupportedNetworkId = this.targetNetworkInfo.networkId;
+      this.chosenSupportedNetworkName = this.targetNetworkInfo.name;
+      const bookContractAbiArray = this.bookInfo.bookAbiArray;
+      let BookContract = this.web3.eth.contract(bookContractAbiArray);
+      this.bookContract = BookContract.at(this.bookInfo.bookAddress);
+      const baseTokenAbiArray = this.bookInfo.base.abiArray;
+      let BaseTokenContract = this.web3.eth.contract(baseTokenAbiArray);
+      this.baseToken = BaseTokenContract.at(this.bookInfo.base.address);
+      const rwrdTokenAbiArray = this.bookInfo.rwrd.abiArray;
+      let RwrdTokenContract = this.web3.eth.contract(rwrdTokenAbiArray);
+      this.rwrdToken = RwrdTokenContract.at(this.bookInfo.rwrd.address);
+      this.web3.eth.getBlockNumber(this._handleBlockNumber);
+    }
+    let canMakePublicCalls = web3Present && this.initialBlockNumber;
+    let blockInfo = "";
+    if (this.blockNumber && this.blockDate) {
+      let millis = (new Date()).getTime() - this.blockDate.getTime();
+      let blockAge = Math.floor(millis / 1000);
+      blockInfo = this.blockNumber + " (" + blockAge + "s ago)";
+    }
+    return {
+      bridgeMode: this.bridgeMode,
+      web3Present: web3Present,
+      unsupportedNetwork: false,
+      chosenSupportedNetworkName: this.chosenSupportedNetworkName,
+      targetNetworkName: this.targetNetworkInfo.name,
+      networkChanged: false,
+      chosenAccount: this.manualEthAddress,
+      accountLocked: false,
+      accountChanged: false,
+      canReadBook: canMakePublicCalls,
+      mightReadAccountOrders: true,
+      canReadAccountOrders: canMakePublicCalls,
+      mightSendTransactions: true,
+      // probably need some way to warn bridge users that it's not automatic?
+      canSendTransactions: canMakePublicCalls,
+      withinGracePeriod: (new Date() - this.startedConnectingAt) < 5000,
+      blockInfo: blockInfo
+    };
   }
     
   getUpdatedStatusMetaMask = () => {
@@ -164,6 +242,7 @@ class Bridge {
       this.web3.eth.getBlockNumber(this._handleBlockNumber);
     }
     let networkChanged = web3Present && this.chosenSupportedNetworkId !== undefined && networkId !== this.chosenSupportedNetworkId;
+    // yes this is a synchronous call but this is one of the few that metamask allows ...?
     var firstAccount = web3Present ? this.web3.eth.accounts[0] : undefined;
     let accountLocked = web3Present && firstAccount === undefined; // TODO - perhaps check not all zeroes?
     if (web3Present && this.chosenAccount === undefined && !accountLocked) {
@@ -259,9 +338,11 @@ class Bridge {
     return status.canSendTransactions;
   }
   
-  // Internal. Can fail if web3 not ready / locked.
   _getOurAddress = () => {
-    return this.web3.eth.accounts[0];
+    // TODO - hmm, what if called too soon?
+    // TODO - hmm, what if status changes so that no longer account available?
+    let status = this.getUpdatedStatus();
+    return status.chosenAccount;
   }
 
   // Request callback with client's balances (if available).
@@ -306,6 +387,30 @@ class Bridge {
     this.web3.eth.getBalance(ourAddress, wrapperCallback2);
   }
 
+  sendTransaction = (goalDesc, appearDesc, contractAddress, contractMethod, contractArgs, ethValue, gasAmount, callback) => {
+    // TODO - manual transactions
+    let txnObj = {
+      from: this._getOurAddress(),
+      gas: gasAmount
+    };
+    if (ethValue && ethValue.gt(0)) {
+      txnObj.value = ethValue;
+    } else {
+      txnObj.value = new BigNumber(0);
+    }
+    if (this.bridgeMode === "manual") {
+      let data = contractMethod.getData(...contractArgs, txnObj);
+      this.handleManualTransactionRequest(goalDesc, appearDesc, txnObj.from, contractAddress, txnObj.value, txnObj.gas, data);
+      // TODO - what transaction-watcher style events to generate and pass to the callback?
+    } else {
+      contractMethod.sendTransaction(
+        ...contractArgs,
+        txnObj,
+        (new TransactionWatcher(this.web3, callback, gasAmount)).handleTxn
+      );
+    }
+  }
+
   // Submit a base deposit approval for given friendly base amount.
   // Callback fn should take (error, event) - see TransactionWatcher.
   // Returns nothing useful.
@@ -316,12 +421,13 @@ class Bridge {
     // use fixed amount so can detect failures by max consumption
     // TODO - different tokens may require different amounts ...
     let gasAmount = 250000;
-    this.baseToken.approve.sendTransaction(
-      this.bookContract.address,
-      // TODO - valueOf is just to work around an annoying recent web3 bug ...
-      UbiTokTypes.encodeBaseAmount(fmtAmount).valueOf(),
-      { from: this._getOurAddress(), gas: gasAmount },
-      (new TransactionWatcher(this.web3, callback, gasAmount)).handleTxn
+    this.sendTransaction(
+      "approve tokens for the book contract", "approved amount change",
+      this.baseToken.address, this.baseToken.approve,
+      [this.bookContract.address, UbiTokTypes.encodeBaseAmount(fmtAmount).valueOf()],
+      new BigNumber(0),
+      gasAmount,
+      callback
     );
   }
 
@@ -333,11 +439,14 @@ class Bridge {
       return;
     }
     // use fixed amount so can detect failures by max consumption
-    // TODO - different tokens may require different amounts ...
     let gasAmount = 250000;
-    this.bookContract.transferFromBase.sendTransaction(
-      { from: this._getOurAddress(), gas: gasAmount },
-      (new TransactionWatcher(this.web3, callback, gasAmount)).handleTxn
+    this.sendTransaction(
+      "finish depositing tokens to the book contract", "token balance change",
+      this.bookContract.address, this.bookContract.transferFromBase,
+      [],
+      new BigNumber(0),
+      gasAmount,
+      callback
     );
   }
 
@@ -349,13 +458,14 @@ class Bridge {
       return;
     }
     // use fixed amount so can detect failures by max consumption
-    // TODO - different tokens may require different amounts ...
     let gasAmount = 250000;
-    this.bookContract.transferBase.sendTransaction(
-      // TODO - valueOf is just to work around an annoying recent web3 bug ...
-      UbiTokTypes.encodeBaseAmount(fmtAmount).valueOf(),
-      { from: this._getOurAddress(), gas: gasAmount },
-      (new TransactionWatcher(this.web3, callback, gasAmount)).handleTxn
+    this.sendTransaction(
+      "withdraw tokens from the book contract", "token balance change",
+      this.bookContract.address, this.bookContract.transferBase,
+      [UbiTokTypes.encodeBaseAmount(fmtAmount).valueOf()],
+      new BigNumber(0),
+      gasAmount,
+      callback
     );
   }
 
@@ -366,15 +476,13 @@ class Bridge {
     if (!this.checkCanSendTransactions(callback)) {
       return;
     }
-    // use fixed amount so can detect failures by max consumption
     let gasAmount = 150000;
-    this.bookContract.depositCntr.sendTransaction(
-      {
-        from: this._getOurAddress(),
-        gas: gasAmount,
-        value: UbiTokTypes.encodeCntrAmount(fmtAmount)
-      },
-      (new TransactionWatcher(this.web3, callback, gasAmount)).handleTxn
+    this.sendTransaction(
+      "deposit ETH into the book contract", "balance change",
+      this.bookContract.address, this.bookContract.depositCntr,
+      [],
+      UbiTokTypes.encodeCntrAmount(fmtAmount), gasAmount,
+      callback
     );
   }
 
@@ -387,11 +495,13 @@ class Bridge {
     }
     // use fixed amount so can detect failures by max consumption
     let gasAmount = 150000;
-    this.bookContract.withdrawCntr.sendTransaction(
-      // TODO - valueOf is just to work around an annoying recent web3 bug ...
-      UbiTokTypes.encodeCntrAmount(fmtAmount).valueOf(),
-      { from: this._getOurAddress(), gas: gasAmount },
-      (new TransactionWatcher(this.web3, callback, gasAmount)).handleTxn
+    this.sendTransaction(
+      "withdraw ETH from the book contract", "balance change",
+      this.bookContract.address, this.bookContract.withdrawCntr,
+      [UbiTokTypes.encodeCntrAmount(fmtAmount).valueOf()],
+      new BigNumber(0),
+      gasAmount,
+      callback
     );
   }
   
@@ -439,15 +549,19 @@ class Bridge {
     }
     // probably too pessimistic, can reduce once analysed worst-case properly
     let gasAmount = 300000 + 100000 * maxMatches;
-    this.bookContract.createOrder.sendTransaction(
-      // TODO - valueOf is just to work around an annoying recent web3 bug ...
-      UbiTokTypes.encodeOrderId(fmtOrderId).valueOf(),
-      UbiTokTypes.encodePrice(fmtPrice).valueOf(),
-      UbiTokTypes.encodeBaseAmount(fmtSizeBase).valueOf(),
-      UbiTokTypes.encodeTerms(fmtTerms).valueOf(),
-      maxMatches,
-      { from: this._getOurAddress(), gas: gasAmount },
-      (new TransactionWatcher(this.web3, callback, gasAmount)).handleTxn
+    this.sendTransaction(
+      "place an order to " + fmtPrice, "new order",
+      this.bookContract.address, this.bookContract.createOrder,
+      [
+        UbiTokTypes.encodeOrderId(fmtOrderId).valueOf(),
+        UbiTokTypes.encodePrice(fmtPrice).valueOf(),
+        UbiTokTypes.encodeBaseAmount(fmtSizeBase).valueOf(),
+        UbiTokTypes.encodeTerms(fmtTerms).valueOf(),
+        maxMatches,
+      ],
+      new BigNumber(0),
+      gasAmount,
+      callback
     );
   }
 
@@ -460,12 +574,16 @@ class Bridge {
     }
     // probably too pessimistic, can reduce once analysed worst-case properly
     let gasAmount = 150000 + 100000 * maxMatches;
-    this.bookContract.continueOrder.sendTransaction(
-      // TODO - valueOf is just to work around an annoying recent web3 bug ...
-      UbiTokTypes.encodeOrderId(fmtOrderId).valueOf(),
-      maxMatches,
-      { from: this._getOurAddress(), gas: gasAmount },
-      (new TransactionWatcher(this.web3, callback)).handleTxn
+    this.sendTransaction(
+      "continue matching your order", "order status change",
+      this.bookContract.address, this.bookContract.continueOrder,
+      [
+        UbiTokTypes.encodeOrderId(fmtOrderId).valueOf(),
+        maxMatches,
+      ],
+      new BigNumber(0),
+      gasAmount,
+      callback
     );
   }
 
@@ -480,11 +598,15 @@ class Bridge {
     // a) can't rely on estimate 'cos it can change based on other orders being placed
     // b) it is useful for detecting failed transactions (those that used all the gas)
     let gasAmount = 150000;
-    this.bookContract.cancelOrder.sendTransaction(
-      // TODO - valueOf is just to work around an annoying recent web3 bug ...
-      UbiTokTypes.encodeOrderId(fmtOrderId).valueOf(),
-      { from: this._getOurAddress(), gas: gasAmount },
-      (new TransactionWatcher(this.web3, callback, gasAmount)).handleTxn
+    this.sendTransaction(
+      "cancel your order", "order status change",
+      this.bookContract.address, this.bookContract.cancelOrder,
+      [
+        UbiTokTypes.encodeOrderId(fmtOrderId).valueOf(),
+      ],
+      new BigNumber(0),
+      gasAmount,
+      callback
     );
   }
 
@@ -512,12 +634,30 @@ class Bridge {
     if (!this.checkCanReadBook(callback)) {
       return;
     }
+    if (this.futureMarketEventCallbacks.length > 0) {
+      this.futureMarketEventCallbacks.push(callback);
+      return;
+    }
+    this.futureMarketEventCallbacks = [callback];
     var filter = this.bookContract.MarketOrderEvent();
     filter.watch((error, result) => {
-      if (error) {
-        return callback(error, undefined);
+      var decodedResult = undefined;
+      if (!error) {
+        if (result.args.orderId.cmp(0) === 0 ||
+            result.args.eventTimestamp.cmp(0) === 0 ||
+            result.args.price.cmp(0) === 0) {
+          // some odd problem if we use the web3-provider-engine to workaround
+          // lack of filter support in Infura - something is trying to decode
+          // our ClientOrderEvent events as MarketOrderEvents ?
+          // https://github.com/INFURA/infura/issues/10
+          console.log('warning - received malformed MarketOrderEvent');
+          return;
+        }
+        decodedResult = UbiTokTypes.decodeMarketOrderEvent(result);
       }
-      callback(undefined, UbiTokTypes.decodeMarketOrderEvent(result));
+      for (var cb of this.futureMarketEventCallbacks) {
+        cb(error, decodedResult);
+      }
     });
   }
 
