@@ -35,7 +35,7 @@ class DemoHelp extends React.Component {
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={this.props.onHide}>Close</Button>
+          <Button onClick={this.props.onHide}>OK, I got it</Button>
         </Modal.Footer>
       </Modal>
     );

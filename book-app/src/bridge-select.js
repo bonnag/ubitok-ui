@@ -12,6 +12,7 @@ class BridgeSelect extends React.Component {
   // show = true/false, mode, manualEthAddress, onDone = callback
   constructor(props) {
     super(props);
+    // hmm, bad practice (what if props change) but we only show it once anyway ...
     this.state = {
       selectedKey: this.props.mode,
       myEthAddress: this.props.manualEthAddress

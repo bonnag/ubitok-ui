@@ -388,7 +388,6 @@ class Bridge {
   }
 
   sendTransaction = (goalDesc, appearDesc, contractAddress, contractMethod, contractArgs, ethValue, gasAmount, callback) => {
-    // TODO - manual transactions
     let txnObj = {
       from: this._getOurAddress(),
       gas: gasAmount
@@ -400,8 +399,7 @@ class Bridge {
     }
     if (this.bridgeMode === "manual") {
       let data = contractMethod.getData(...contractArgs, txnObj);
-      this.handleManualTransactionRequest(goalDesc, appearDesc, txnObj.from, contractAddress, txnObj.value, txnObj.gas, data);
-      // TODO - what transaction-watcher style events to generate and pass to the callback?
+      this.handleManualTransactionRequest(goalDesc, appearDesc, txnObj.from, contractAddress, txnObj.value, txnObj.gas, data, callback);
     } else {
       contractMethod.sendTransaction(
         ...contractArgs,
@@ -688,7 +686,9 @@ class Bridge {
 // we need some way of knowing if/when it made it into the blockchain.
 // Use by creating a TransactionWatcher and passing its handleTxn method
 // as the callback to a web3 contractMethod.sendTransaction call.
-// It will in invoke your callback with:
+// For immediate errors (e.g. user reject) it will invoke your callback
+// with an error.
+// Otherwise, in metamask mode it will in invoke your callback with:
 //  1. {event: "GotTxnHash", txnHash: "the hash"}
 // Followed by either:
 //  2a. {event: "Mined"}
@@ -696,9 +696,12 @@ class Bridge {
 //  2b. {event: "FailedTxn"}
 // But it can only return FailedTxn if you give it a "optionalGasFail"
 // value - if the txn uses that much gas (or more) it assumes it has failed.
-// TODO - is there really no better way to detect a bad transaction?
-// TODO - how about for manual bridge mode where user sends via MEW?
-//
+// TODO - is there really no better way to detect a bad transaction - think EIP on way?
+// In manual mode the flow is:
+//  1. {event: "ManualSend"}
+// followed several seconds later by:
+//  2. {event: "ManualSendCleanupHint"}
+// because we don't know if the txn was actually sent .. see App.js.
 class TransactionWatcher {
 
   constructor(web3, callback, optionalGasFail) {

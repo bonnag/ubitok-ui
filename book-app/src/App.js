@@ -614,6 +614,11 @@ class App extends Component {
     } else {
       if (result.event === "GotTxnHash") {
         this.updateMyOrder(orderId, {txnHash: result.txnHash});
+      } else if (result.event === "ManualSend") {
+        // not much we can do?
+      } else if (result.event === "ManualSendCleanupHint") {
+        // not much we can do?
+        this.refreshOrder(orderId);
       } else {
         // TODO - handle FailedTxn (will appear as Unknown otherwise)
         this.refreshOrder(orderId);
@@ -630,8 +635,14 @@ class App extends Component {
     } else {
       if (result.event === "GotTxnHash") {
         // TODO - suppose should try to convey the txn hash for cancel/continue somehow
+      } else if (result.event === "ManualSend") {
+        // not much we can do?
+      } else if (result.event === "ManualSendCleanupHint") {
+        // not much we can do?
+        this.updateMyOrder(orderId, { modifyInProgress: undefined });
+        this.refreshOrder(orderId);
       } else {
-        // TODO - handle FailedTxn
+        // TODO - handle FailedTxn differently?
         this.updateMyOrder(orderId, { modifyInProgress: undefined });
         this.refreshOrder(orderId);
       }
@@ -771,6 +782,10 @@ class App extends Component {
         this.updatePaymentEntry(pmtId, {pmtStatus: "Mined"});
       } else if (result.event === "FailedTxn") {
         this.updatePaymentEntry(pmtId, {pmtStatus: "FailedTxn"});
+      } else if (result.event === "ManualSend") {
+        // not much we can do?
+      } else if (result.event === "ManualSendCleanupHint") {
+        this.updatePaymentEntry(pmtId, {pmtStatus: "Unknown"});
       }
     }
   }
@@ -864,7 +879,8 @@ class App extends Component {
     }
   }
   
-  handleManualTransactionRequest = (goalDesc, appearDesc, fromAddress, toAddress, amountToSend, gasLimit, data) => {
+  handleManualTransactionRequest = (goalDesc, appearDesc, fromAddress, toAddress, amountToSend, gasLimit, data, callback) => {
+    this.manualTxnRequestCallback = callback;
     this.setState((prevState, props) => {
       return {
         manualTxnRequest: {
@@ -896,6 +912,15 @@ class App extends Component {
         }
       };
     });
+    let callback = this.manualTxnRequestCallback;
+    this.manualTxnRequestCallback = undefined;
+    if (!sent) {
+      callback(new Error("txn rejected by user"), undefined);
+    } else {
+      // bit nasty
+      callback(undefined, {event: "ManualSend"});
+      window.setTimeout(() => {callback(undefined, {event:"ManualSendCleanupHint"})}, 10000);
+    }
   }
 
   render() {
@@ -1016,10 +1041,13 @@ class App extends Component {
                     <tr key={entry.pmtId}>
                       <td>
                         { (entry.pmtStatus === "FailedSend") ? (
-                          <Glyphicon glyph="exclamation-sign" title="failed to send payment" />
+                          <Glyphicon glyph="exclamation-sign" className="standaloneGlyphicon" title="failed to send payment" />
                         ) : null }
                         { (entry.pmtStatus === "FailedTxn") ? (
-                          <Glyphicon glyph="exclamation-sign" title="payment transaction failed" />
+                          <Glyphicon glyph="exclamation-sign" className="standaloneGlyphicon" title="payment transaction failed" />
+                        ) : null }
+                        { (entry.pmtStatus === "Unknown") ? (
+                          <Glyphicon glyph="question-sign" className="standaloneGlyphicon" title="submitted manually - check your wallet"/>
                         ) : null }
                         <EthTxnLink txnHash={entry.txnHash} networkName={this.state.bridgeStatus.chosenSupportedNetworkName} />
                         {entry.action}
