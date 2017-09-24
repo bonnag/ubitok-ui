@@ -4,7 +4,9 @@ import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
 // sparking conspiracy theories on reddit
 class DemoActorWhale {
     
+  /* eslint-disable no-unused-vars */
   constructor(bridge, actorAccount, direction, now) {
+  /* eslint-enable no-unused-vars */
     this.bridge = bridge;
     this.actorAccount = actorAccount;
     this.direction = direction;
@@ -15,7 +17,9 @@ class DemoActorWhale {
     this.txnInProgress = false;
   }
 
+  /* eslint-disable no-unused-vars */
   advance = (now, truePrice, trueSpread) => {
+  /* eslint-enable no-unused-vars */
 
     let stillInterestingOrders = [];
     for (let order of this.interestingOrders) {

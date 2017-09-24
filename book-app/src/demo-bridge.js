@@ -1,9 +1,9 @@
 import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
 import ReferenceExchange from "ubitok-jslib/reference-exchange.js";
 
-import DemoActorWhale from "./demo-actor-whale.js"
-import DemoActorSniper from "./demo-actor-sniper.js"
-import DemoActorStacker from "./demo-actor-stacker.js"
+import DemoActorWhale from "./demo-actor-whale.js";
+import DemoActorSniper from "./demo-actor-sniper.js";
+import DemoActorStacker from "./demo-actor-stacker.js";
 
 let BigNumber = UbiTokTypes.BigNumber;
 
@@ -235,21 +235,27 @@ class DemoBridge {
 
   // Check if the bridge currently appears able to make public (constant, no account needed) calls.
   // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
+  /* eslint-disable no-unused-vars */
   checkCanReadBook = (callbackIfNot) => {
     return true;
   }
+  /* eslint-enable no-unused-vars */
 
   // Check if the bridge currently appears able to make account-related calls.
   // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
+  /* eslint-disable no-unused-vars */
   checkCanReadAccountOrders = (callbackIfNot) => {
     return true;
   }
+  /* eslint-enable no-unused-vars */
 
   // Check if the bridge currently appears able to make account-related calls.
   // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
+  /* eslint-disable no-unused-vars */
   checkCanSendTransactions = (callbackIfNot) => {
     return true;
   }
+  /* eslint-enable no-unused-vars */
   
   // Request callback with client's balances (if available).
   // Callback fn should take (error, result) where result is an object

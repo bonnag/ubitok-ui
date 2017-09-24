@@ -24,7 +24,7 @@ class CreateOrder extends React.Component {
       "terms": "GTCNoGasTopup",
       "error": ""
     };
-    this.props.priceClickEventEmitter.subscribe('createOrder' + this.props.direction, this.setPrice);
+    this.props.priceClickEventEmitter.subscribe("createOrder" + this.props.direction, this.setPrice);
   }
 
   formatBase = (rawAmount) => {
@@ -40,8 +40,8 @@ class CreateOrder extends React.Component {
       this.getCreateOrderAmountValidationResult(),
       this.getCreateOrderPriceValidationResult(),
       ( this.props.direction === "Buy" ?
-         this.getCreateOrderCostValidationResult() :
-         this.getCreateOrderProceedsValidationResult() ),
+        this.getCreateOrderCostValidationResult() :
+        this.getCreateOrderProceedsValidationResult() ),
       this.getCreateOrderTermsValidationResult()
     ];
     // TODO - check if eth too low to pay gas? or do that globally?
@@ -300,10 +300,10 @@ class CreateOrder extends React.Component {
         </FormGroup>
         <FormGroup>
           { (this.state.error === "" ? undefined : (
-          <Alert bsStyle="danger" onDismiss={this.handleAlertDismiss}>
-            <p>{this.state.error}</p>
-            <p><Button onClick={this.handleAlertDismiss}>OK</Button></p>
-          </Alert>
+            <Alert bsStyle="danger" onDismiss={this.handleAlertDismiss}>
+              <p>{this.state.error}</p>
+              <p><Button onClick={this.handleAlertDismiss}>OK</Button></p>
+            </Alert>
           ))}
           <ButtonToolbar>
             <SendingButton bsStyle={(this.props.direction === "Buy") ? "primary" : "warning"} onClick={this.handlePlaceOrder} text={"Place " + this.props.direction + " Order"} />

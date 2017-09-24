@@ -17,7 +17,9 @@ class DemoActorSniper {
     this.gapIndex = this.rng.integer(0, this.gapsSeconds.length - 1);
   }
 
+  /* eslint-disable no-unused-vars */
   advance = (now, truePrice, trueSpread) => {
+  /* eslint-enable no-unused-vars */
 
     if (this.txnInProgress) {
       return;
@@ -40,6 +42,7 @@ class DemoActorSniper {
     var targetSpread = truePrice * this.spreadRatioTarget;
     var targetPrice = (this.direction === "Buy") ? truePrice + targetSpread : truePrice - targetSpread;
     let orderId = UbiTokTypes.generateDecodedOrderIdAt(new Date(now));
+    /* eslint-disable no-unused-vars */
     this.bridge._queueTxn(
       () => {
         this.bridge.rx.createOrder(
@@ -52,6 +55,7 @@ class DemoActorSniper {
         );
       }, {}, (err, res) => {}
     );
+    /* eslint-enable no-unused-vars */
     return;
   }
 

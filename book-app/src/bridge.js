@@ -93,7 +93,7 @@ class Bridge {
         ZeroClientProvider({
           static: {
             eth_syncing: false,
-            web3_clientVersion: 'ZeroClientProvider',
+            web3_clientVersion: "ZeroClientProvider",
           },
           pollingInterval: 4000,
           rpcUrl: endpoint,
@@ -155,7 +155,7 @@ class Bridge {
         ZeroClientProvider({
           static: {
             eth_syncing: false,
-            web3_clientVersion: 'ZeroClientProvider',
+            web3_clientVersion: "ZeroClientProvider",
           },
           pollingInterval: 4000,
           rpcUrl: endpoint,
@@ -208,9 +208,9 @@ class Bridge {
   }
     
   getUpdatedStatusMetaMask = () => {
-      // TODO - add support for new ethereum object
+    // TODO - add support for new ethereum object
     if (this.web3 === undefined && window.web3) {
-      console.log("found web3 provider");
+      //console.log("found web3 provider");
       this.web3 = new Web3(window.web3.currentProvider);
     }
     let web3Present = this.web3 !== undefined && this.web3.hasOwnProperty("version");
@@ -220,14 +220,14 @@ class Bridge {
     } catch (e) {
       // in some web3 versions this seems to throw when the page is being closed?
       // treat as web3 not available yet?
-      console.log("problem using web3", e);
+      //console.log("problem using web3", e);
     }
     if (networkId === undefined) {
       web3Present = false;
     }
     let unsupportedNetwork = web3Present && networkId !== this.targetNetworkInfo.networkId;
     if (web3Present && this.chosenSupportedNetworkId === undefined && !unsupportedNetwork) {
-      console.log("choosing network", networkId);
+      //console.log("choosing network", networkId);
       this.chosenSupportedNetworkId = networkId;
       this.chosenSupportedNetworkName = this.targetNetworkInfo.name;
       const bookContractAbiArray = this.bookInfo.bookAbiArray;
@@ -246,7 +246,7 @@ class Bridge {
     var firstAccount = web3Present ? this.web3.eth.accounts[0] : undefined;
     let accountLocked = web3Present && firstAccount === undefined; // TODO - perhaps check not all zeroes?
     if (web3Present && this.chosenAccount === undefined && !accountLocked) {
-      console.log("choosing account", firstAccount);
+      //console.log("choosing account", firstAccount);
       this.chosenAccount = firstAccount;
     }
     let accountChanged = web3Present && this.chosenAccount !== undefined && firstAccount !== this.chosenAccount;
@@ -380,7 +380,7 @@ class Bridge {
       } else {
         let translatedResult = {
           ownCntr: UbiTokTypes.decodeCntrAmount(result)
-        }
+        };
         return callback(error, translatedResult);
       }
     };
@@ -648,7 +648,7 @@ class Bridge {
           // lack of filter support in Infura - something is trying to decode
           // our ClientOrderEvent events as MarketOrderEvents ?
           // https://github.com/INFURA/infura/issues/10
-          console.log('warning - received malformed MarketOrderEvent');
+          //console.log('warning - received malformed MarketOrderEvent');
           return;
         }
         decodedResult = UbiTokTypes.decodeMarketOrderEvent(result);

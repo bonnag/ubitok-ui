@@ -44,9 +44,9 @@ class DemoActorStacker {
 
     var desiredOrders = [
       {
-         price: this.direction + " @ " + (targetPrice1 + 1e-8).toFixed(3),
-         sizeBase: UbiTokTypes.encodeBaseAmount(100),
-         found: false
+        price: this.direction + " @ " + (targetPrice1 + 1e-8).toFixed(3),
+        sizeBase: UbiTokTypes.encodeBaseAmount(100),
+        found: false
       },
       {
         price: this.direction + " @ " + (targetPrice2 + 1e-8).toFixed(3),

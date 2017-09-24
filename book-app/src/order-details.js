@@ -107,9 +107,9 @@ class OrderDetails extends React.Component {
                   </tr>
                 ) }
                 <tr>
-                    <td>Fees ({this.props.pairInfo.rwrd.symbol})</td>
-                    <td>{this.formatRwrd(this.props.myOrder.rawFeesRwrd)}</td>
-                  </tr>
+                  <td>Fees ({this.props.pairInfo.rwrd.symbol})</td>
+                  <td>{this.formatRwrd(this.props.myOrder.rawFeesRwrd)}</td>
+                </tr>
                 <tr>
                   <td>Status</td>
                   <td>{this.props.myOrder.status}</td>

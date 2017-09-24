@@ -88,14 +88,14 @@ class BookBuilder {
       return 0;
     }
     // most generous first, only opposite side
-    let sortedPairs = fmtPrice.startsWith('Buy') ? (
+    let sortedPairs = fmtPrice.startsWith("Buy") ? (
       Array.from(this._internalBook.entries())
         .filter((a) => a[0] >= UbiTokTypes.minSellPricePacked && a[1].count > 0)
         .sort((a,b) => a[0]-b[0])
     ) : (
       Array.from(this._internalBook.entries())
       // yes, less than minBuyPricePacked looks a bit wrong but it isn't
-      .filter((a) => a[0] <= UbiTokTypes.minBuyPricePacked && a[1].count > 0)
+        .filter((a) => a[0] <= UbiTokTypes.minBuyPricePacked && a[1].count > 0)
         .sort((a,b) => a[0]-b[0])
     );
     let ourRawDepthRemaining = UbiTokTypes.encodeBaseAmount(fmtSizeBase);
@@ -133,7 +133,7 @@ class BookBuilder {
       this.updateInternalBookFromEvent(event);
     }
     this._queuedMarketEvents = [];
-    this._subscriberFn(undefined, 'Update');
+    this._subscriberFn(undefined, "Update");
   }
 
   updateInternalBookFromEvent = (event) => {

@@ -10,7 +10,7 @@ import moment from "moment";
 
 import Cookies from "js-cookie";
 
-import { NotificationContainer, NotificationManager } from "react-notifications";
+import { NotificationContainer } from "react-notifications";
 
 import Spinner from "react-spinkit";
 import UbiLogo from "./ubitok-logo.svg";
@@ -35,7 +35,7 @@ import "react-notifications/lib/notifications.css";
 
 import MoneyAmount from "./money-amount.js";
 import Bridge from "./bridge.js";
-import BookBuilder from './book-builder.js';
+import BookBuilder from "./book-builder.js";
 import DemoBridge from "./demo-bridge.js";
 import EventEmitter from "./event-emitter.js";
 import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
@@ -214,7 +214,7 @@ class App extends Component {
       },
       "marketTradesLoaded": false,
 
-       // TODO - use a cookie to stop showing it every time
+      // TODO - use a cookie/localStorage to stop showing it every time?
       "showDemoHelp": networkInfo.liveness === "DEMO",
 
       // how to connect to network - show, mode, manualEthAddress
@@ -260,7 +260,9 @@ class App extends Component {
   }
 
   warn = (msg) => {
+    /* eslint-disable no-console */
     console.log(msg);
+    /* eslint-enable no-console */
   }
 
   getInitialBridgeSelect = (networkInfo) => {
@@ -270,7 +272,7 @@ class App extends Component {
     let prefsStr = Cookies.get("UbiTokBridgePrefs");
     let prefs = undefined;
     try {
-      prefs = JSON.parse(prefsStr)
+      prefs = JSON.parse(prefsStr);
     } catch (e) {
       // not useful
     }
@@ -286,7 +288,7 @@ class App extends Component {
       show: true,
       mode: mode,
       manualEthAddress: manualEthAddress
-    }
+    };
   }
   
   handleDemoHelpHide = () => {
@@ -404,7 +406,7 @@ class App extends Component {
     this.bridge.walkMyOrders(undefined, this.handleWalkMyOrdersCallback);
   }
 
-  handleBookUpdate = (error, event) => {
+  handleBookUpdate = (error) => {
     if (error) {
       this.panic(error);
       return;
@@ -542,7 +544,7 @@ class App extends Component {
   }
 
   chooseMaxMatches = (price, sizeBase, terms) => {
-    if (terms === 'MakerOnly') {
+    if (terms === "MakerOnly") {
       return 0;
     }
     let estimatedMatches = this.bookBuilder.estimateMatches(price, sizeBase);
@@ -612,7 +614,6 @@ class App extends Component {
   }
 
   handlePlaceOrderCallback = (orderId, error, result) => {
-    console.log("might have placed order", orderId, error, result);
     if (error) {
       this.updateMyOrder(orderId, { status: "FailedSend" });
     } else {
@@ -631,7 +632,6 @@ class App extends Component {
   }
 
   handleModifyOrderCallback = (orderId, error, result) => {
-    console.log("might have done something to order", orderId, error, result);
     // TODO - but what if someone does multiple cancels/continues ...
     //var existingOrder = this.state.myOrders[orderId];
     if (error) {
@@ -923,7 +923,7 @@ class App extends Component {
     } else {
       // bit nasty
       callback(undefined, {event: "ManualSend"});
-      window.setTimeout(() => {callback(undefined, {event:"ManualSendCleanupHint"})}, 10000);
+      window.setTimeout(() => {callback(undefined, {event:"ManualSendCleanupHint"});}, 10000);
     }
   }
 
@@ -982,7 +982,7 @@ class App extends Component {
                 amountToSend={this.state.manualTxnRequest.amountToSend}
                 gasLimit={this.state.manualTxnRequest.gasLimit}
                 data={this.state.manualTxnRequest.data}
-                onDone={(sent)=>{this.handleManualTxnRequestDone(sent)}}
+                onDone={(sent)=>{this.handleManualTxnRequestDone(sent);}}
                 chosenNetworkId={this.state.bridgeStatus.chosenNetworkId}
                 chosenNetworkName={this.state.bridgeStatus.chosenSupportedNetworkName}
               />
@@ -1276,12 +1276,12 @@ class App extends Component {
                             <td>{entry[2]}</td>
                           </tr>
                         )}
-                        {this.getBookPadding('asks').map((entry) => 
+                        {this.getBookPadding("asks").map((entry) => 
                           <tr key={entry[0]}>
                             <td colSpan="3">{entry[1]}&nbsp;</td>
                           </tr>
                         )}
-                    </tbody>
+                      </tbody>
                     </Table>
                   </div>
                 </Col>
@@ -1303,7 +1303,7 @@ class App extends Component {
                             <td>{entry[2]}</td>
                           </tr>
                         )}
-                        {this.getBookPadding('bids').map((entry) => 
+                        {this.getBookPadding("bids").map((entry) => 
                           <tr key={entry[0]}>
                             <td colSpan="3">{entry[1]}&nbsp;</td>
                           </tr>
@@ -1373,12 +1373,11 @@ class App extends Component {
                         )}
                         { !this.state.bridgeStatus.mightReadAccountOrders ? (
                           <tr key="dummy">
-                              <td colSpan="6">Not available in guest mode.</td>
+                            <td colSpan="6">Not available in guest mode.</td>
                           </tr>
                         ) : this.state.myOrdersLoaded && Object.keys(this.state.myOrders).length === 0 ? (
                           <tr key="dummy">
-                              <td colSpan="6">No open or recent orders found for your address.</td>
-                              <td colSpan="6">Not available in guest mode.</td>
+                            <td colSpan="6">No open or recent orders found for your address.</td>
                           </tr>
                         ) : undefined}
                       </tbody>

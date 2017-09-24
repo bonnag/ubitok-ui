@@ -16,7 +16,7 @@ class PriceCell extends React.Component {
     let price = this.props.price;
     if (!price || !price.indexOf) return;
     // hmm, should use UbiTokTypes really
-    let sepPos = price.indexOf('@');
+    let sepPos = price.indexOf("@");
     if (sepPos < 0) return;
     let priceOnly = price.substr(sepPos + 2);
     this.props.onClick(priceOnly);

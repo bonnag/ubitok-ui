@@ -38,8 +38,8 @@ class ManualTxn extends React.Component {
   }
 
   CopyOnlyFormControl = (props) =>
-  <FormControl className="copyOnlyFormControl" {...props} 
-    onChange={() => {}} onClick={() => this.handleValueClick(props.value)} />
+    <FormControl className="copyOnlyFormControl" {...props} 
+      onChange={() => {}} onClick={() => this.handleValueClick(props.value)} />
 
   render() {
 
@@ -59,9 +59,9 @@ class ManualTxn extends React.Component {
             Here are the details you need to copy into <b><a href="https://www.myetherwallet.com/#send-transaction">MyEtherWallet Send Ether &amp; Tokens</a></b>:
           </p>
           {this.props.chosenNetworkId !== "1" ? (
-          <Alert bsStyle="warning">
-          <b>Careful</b> - Make sure you choose the {this.props.chosenNetworkName}.
-          </Alert>
+            <Alert bsStyle="warning">
+              <b>Careful</b> - Make sure you choose the {this.props.chosenNetworkName}.
+            </Alert>
           ) : undefined}
           <p>
             <i>Tip: Clicking a value below will copy it to your clipboard automatically.</i>
