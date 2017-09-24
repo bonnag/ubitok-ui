@@ -468,6 +468,12 @@ class DemoBridge {
     this.futureMarketEventSubscribers.push(callback);
   }
 
+  /* eslint-disable no-unused-vars */
+  subscribeFutureClientOrderEvents = (callback) => {
+    // WARN: not bothered with this yet - we always get txn callbacks reliably
+  }
+  /* eslint-enable no-unused-vars */
+
   _translateMarketOrderEvent = (refEvent) => {
     return {
       blockNumber: refEvent.blockNumber,

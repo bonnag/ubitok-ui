@@ -23,6 +23,7 @@ class Bridge {
     this.bridgeMode = undefined;
     this.manualEthAddress = "";
     this.futureMarketEventCallbacks = [];
+    this.futureClientOrderEventCallbacks = [];
   }
 
   // Used to initialise our page before polling starts.
@@ -677,6 +678,31 @@ class Bridge {
       }
       callback(undefined, result.map(
         (rawEntry) => UbiTokTypes.decodeMarketOrderEvent(rawEntry)));
+    });
+  }
+
+  subscribeFutureClientOrderEvents = (callback) => {
+    if (!this.checkCanReadAccountOrders(callback)) {
+      return;
+    }
+    if (this.futureClientOrderEventCallbacks.length > 0) {
+      this.futureClientOrderEventCallbacks.push(callback);
+      return;
+    }
+    this.futureClientOrderEventCallbacks = [callback];
+    // TODO - only want ours - can probably filter more efficiently?
+    var filter = this.bookContract.ClientOrderEvent();
+    filter.watch((error, result) => {
+      var decodedResult = undefined;
+      if (!error) {
+        decodedResult = UbiTokTypes.decodeClientOrderEvent(result);
+        if (decodedResult.client.toLowerCase() !== this._getOurAddress().toLowerCase()) {
+          return;
+        }
+      }
+      for (var cb of this.futureClientOrderEventCallbacks) {
+        cb(error, decodedResult);
+      }
     });
   }
 

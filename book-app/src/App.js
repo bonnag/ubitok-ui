@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { Navbar, Nav, NavItem, NavDropdown, MenuItem, Tab, Tabs,
   Grid, Row, Col, Table,
   ButtonToolbar, Button, Glyphicon, 
-  FormGroup, FormControl, ControlLabel, HelpBlock, InputGroup,
   Tooltip, OverlayTrigger } from "react-bootstrap";
 
 import update from "immutability-helper";
@@ -22,13 +21,14 @@ import BridgeStatusNav from "./bridge-status-nav.js";
 import BridgeSelect from "./bridge-select.js";
 import ManualTxn from "./manual-txn.js";
 import CreateOrder from "./create-order.js";
-import SendingButton from "./sending-button.js";
 import EthTxnLink from "./eth-txn-link.js";
 import PriceCell from "./price-cell.js";
 import OrderDetails from "./order-details.js";
 import DemoHelp from "./demo-help.js";
 import BookInfo from "./book-info.js";
-// TODO - move payment forms to seperate components
+import DepositErc20 from "./deposit-erc20.js";
+import DepositEth from "./deposit-eth.js";
+import Withdraw from "./withdraw.js";
 
 import "./App.css";
 import "react-notifications/lib/notifications.css";
@@ -87,18 +87,10 @@ class App extends Component {
       //   minInitialSize: "0.01"
       // },
       // cntr: {
-      //   tradableType: "Ether",
-      //   symbol: "ETH",
-      //   decimals: 18,
-      //   name: "Ether",
-      //   minInitialSize: "0.001"
+      //   as base (but no address)
       // },
       // rwrd: {
-      //   tradableType: "ERC20",
-      //   symbol: "UBI",
-      //   decimals: 18,
-      //   name: "UbiTok Reward Token",
-      //   address: "0x678c4cf3f4a26d607d0a0032d72fdc3b1e3f71f4",
+      //   as base
       // }
 
       "pairInfo": bookInfo,
@@ -499,15 +491,27 @@ class App extends Component {
     }
     var order = UbiTokTypes.decodeWalkClientOrder(result);
     if (order.status === "Unknown") {
-      this.setState((prevState, props) => {
-        return {
-          myOrdersLoaded: update(prevState.myOrdersLoaded, {$set: true})
-        };
-      });
+      this.handleMyOrdersLoaded();
     } else {
       this.createMyOrder(order);
       this.bridge.walkMyOrders(order.orderId, this.handleWalkMyOrdersCallback);
     }
+  }
+
+  handleMyOrdersLoaded = () => {
+    this.setState((prevState, props) => {
+      return {
+        myOrdersLoaded: update(prevState.myOrdersLoaded, {$set: true})
+      };
+    });
+    this.bridge.subscribeFutureClientOrderEvents(this.handleFutureClientOrderEvent);
+  }
+
+  handleFutureClientOrderEvent = (error, event) => {
+    if (error) {
+      return this.warn(error);
+    }
+    this.refreshOrder(event.orderId);
   }
 
   pollBalances = () => {
@@ -695,83 +699,34 @@ class App extends Component {
       };
     });
   }
-  
-  handleDepositBaseNewApprovedAmountChange = (e) => {
-    var v = e.target.value;
-    this.setState((prevState, props) => {
-      return {
-        depositBase: update(prevState.depositBase, {
-          newApprovedAmount: { $set: v }
-        })
-      };
-    });
-  }
 
-  handleDepositBaseSetApprovedAmountClick = () => {
-    // TODO - amount validation, check account unlocked
-    let pmtId = this.createPaymentEntry("Approve " + this.state.pairInfo.base.symbol, this.state.depositBase.newApprovedAmount);
-    this.bridge.submitDepositBaseApprove(this.state.depositBase.newApprovedAmount,
+  handleBaseDepositApproveRequest = (newApprovedAmountBase) => {
+    let pmtId = this.createPaymentEntry("Approve " + this.state.pairInfo.base.symbol, newApprovedAmountBase);
+    this.bridge.submitDepositBaseApprove(newApprovedAmountBase,
       (error, result) => { this.handlePaymentCallback(pmtId, error, result); });
   }
 
-  handleDepositBaseCollectClick = () => {
-    // TODO - amount validation, check account unlocked
+  handleBaseDepositCollectRequest = () => {
     let pmtId = this.createPaymentEntry("Collect " + this.state.pairInfo.base.symbol, "N/A");
     this.bridge.submitDepositBaseCollect(
       (error, result) => { this.handlePaymentCallback(pmtId, error, result); });
   }
 
-  handleWithdrawBaseAmountChange = (e) => {
-    var v = e.target.value;
-    this.setState((prevState, props) => {
-      return {
-        withdrawBase: update(prevState.withdrawBase, {
-          amount: { $set: v }
-        })
-      };
-    });
-  }  
-  
-  handleWithdrawBaseClick = () => {
-    // TODO - amount validation, check account unlocked
-    let pmtId = this.createPaymentEntry("Withdraw " + this.state.pairInfo.base.symbol, this.state.withdrawBase.amount);
-    this.bridge.submitWithdrawBaseTransfer(this.state.withdrawBase.amount,
+  handleWithdrawBaseRequest = (amount) => {
+    let pmtId = this.createPaymentEntry("Withdraw " + this.state.pairInfo.base.symbol, amount);
+    this.bridge.submitWithdrawBaseTransfer(amount,
+      (error, result) => { this.handlePaymentCallback(pmtId, error, result); });
+  }
+
+  handleDepositCntrRequest = (amount) => {
+    let pmtId = this.createPaymentEntry("Deposit " + this.state.pairInfo.cntr.symbol, amount);
+    this.bridge.submitDepositCntr(amount,
       (error, result) => { this.handlePaymentCallback(pmtId, error, result); });
   }  
 
-  handleDepositCntrAmountChange = (e) => {
-    var v = e.target.value;
-    this.setState((prevState, props) => {
-      return {
-        depositCntr: update(prevState.depositCntr, {
-          amount: { $set: v }
-        })
-      };
-    });
-  }  
-  
-  handleDepositCntrClick = () => {
-    // TODO - amount validation, check account unlocked
-    let pmtId = this.createPaymentEntry("Deposit " + this.state.pairInfo.cntr.symbol, this.state.depositCntr.amount);
-    this.bridge.submitDepositCntr(this.state.depositCntr.amount,
-      (error, result) => { this.handlePaymentCallback(pmtId, error, result); });
-  }  
-
-  handleWithdrawCntrAmountChange = (e) => {
-    var v = e.target.value;
-    this.setState((prevState, props) => {
-      return {
-        withdrawCntr: update(prevState.withdrawCntr, {
-          amount: { $set: v }
-        })
-      };
-    });
-  }  
-  
-  handleWithdrawCntrClick = () => {
-    // TODO - amount validation, check account unlocked
-    let pmtId = this.createPaymentEntry("Withdraw " + this.state.pairInfo.cntr.symbol, this.state.withdrawCntr.amount);
-    this.bridge.submitWithdrawCntr(this.state.withdrawCntr.amount,
+  handleWithdrawCntrRequest = (amount) => {
+    let pmtId = this.createPaymentEntry("Withdraw " + this.state.pairInfo.cntr.symbol, amount);
+    this.bridge.submitWithdrawCntr(amount,
       (error, result) => { this.handlePaymentCallback(pmtId, error, result); });
   }
 
@@ -923,7 +878,7 @@ class App extends Component {
     } else {
       // bit nasty
       callback(undefined, {event: "ManualSend"});
-      window.setTimeout(() => {callback(undefined, {event:"ManualSendCleanupHint"});}, 10000);
+      window.setTimeout(() => {callback(undefined, {event:"ManualSendCleanupHint"});}, 20000);
     }
   }
 
@@ -1084,47 +1039,15 @@ class App extends Component {
                         <Glyphicon glyph="remove" title="close" />
                       </Button>
                     </p>
-                    <form id="depositBaseForm">
-                      <FormGroup controlId="step0">
-                        <ControlLabel>Step 0</ControlLabel>
-                        <HelpBlock>
-                          If you have {this.state.pairInfo.base.symbol} tokens in another exchange or account,
-                          you'll first need to withdraw/transfer them to your account: {this.state.bridgeStatus.chosenAccount}.
-                          Currently it owns {this.state.balances.ownBase} {this.state.pairInfo.base.symbol}.
-                        </HelpBlock>
-                      </FormGroup>
-                      <FormGroup controlId="approval">
-                        <ControlLabel>Step 1</ControlLabel>
-                        <HelpBlock>
-                          You need to <i>approve</i> the {this.state.pairInfo.symbol} book contract to allow it to receive your tokens.
-                        </HelpBlock>
-                        <InputGroup>
-                          <InputGroup.Addon>Current Approved Amount</InputGroup.Addon>
-                          <FormControl type="text" value={this.state.balances.approvedBase} readOnly onChange={()=>{}}/>
-                          <InputGroup.Addon>{this.state.pairInfo.base.symbol}</InputGroup.Addon>
-                        </InputGroup>
-                        <HelpBlock>
-                          This is where you choose how much to deposit.
-                        </HelpBlock>
-                        <InputGroup>
-                          <InputGroup.Addon>New Approved Amount</InputGroup.Addon>
-                          <FormControl type="text" value={this.state.depositBase.newApprovedAmount} onChange={this.handleDepositBaseNewApprovedAmountChange}/>
-                          <InputGroup.Addon>{this.state.pairInfo.base.symbol}</InputGroup.Addon>
-                        </InputGroup>
-                        <SendingButton bsStyle="primary" onClick={this.handleDepositBaseSetApprovedAmountClick} text="Set Approved Amount" />
-                        <FormControl.Feedback />
-                        <HelpBlock>
-                        Note: some tokens won't let you change the approved amount unless you set it to zero first.
-                        </HelpBlock>
-                      </FormGroup>
-                      <FormGroup controlId="collection">
-                        <ControlLabel>Step 2</ControlLabel>
-                        <HelpBlock>
-                          Finally, you need to tell the book contract to receive the {this.state.pairInfo.base.symbol} tokens you approved:
-                        </HelpBlock>
-                        <SendingButton bsStyle="primary" onClick={this.handleDepositBaseCollectClick} text={"Collect Approved " + this.state.pairInfo.base.symbol} />
-                      </FormGroup>
-                    </form>
+                    {/* TODO - pass in bridge status so can prevent if account unavailable */}
+                    <DepositErc20
+                      symbol={this.state.pairInfo.base.symbol}
+                      chosenAccount={this.state.bridgeStatus.chosenAccount}
+                      ownAmount={this.state.balances.ownBase}
+                      approvedAmount={this.state.balances.approvedBase}
+                      onApprove={this.handleBaseDepositApproveRequest}
+                      onCollect={this.handleBaseDepositCollectRequest}
+                    />
                   </Tab.Pane>
                   <Tab.Pane eventKey="withdrawBase">
                     <p>
@@ -1133,22 +1056,11 @@ class App extends Component {
                         <Glyphicon glyph="remove" title="close" />
                       </Button>
                     </p>
-                    <form id="withdrawBaseForm">
-                      <FormGroup controlId="transferAmount">
-                        <HelpBlock>
-                          This will transfer {this.state.pairInfo.base.symbol} tokens held for you
-                          by the {this.state.pairInfo.symbol} book contract to your account:
-                          {" "}{this.state.bridgeStatus.chosenAccount}
-                        </HelpBlock>
-                        <InputGroup>
-                          <InputGroup.Addon>Withdrawal Amount</InputGroup.Addon>
-                          <FormControl type="text" value={this.state.withdrawBase.amount} onChange={this.handleWithdrawBaseAmountChange}/>
-                          <InputGroup.Addon>{this.state.pairInfo.base.symbol}</InputGroup.Addon>
-                        </InputGroup>
-                        <SendingButton bsStyle="warning" onClick={this.handleWithdrawBaseClick} text={"Withdraw " + this.state.pairInfo.base.symbol} />
-                        <FormControl.Feedback />
-                      </FormGroup>
-                    </form>
+                    <Withdraw 
+                      symbol={this.state.pairInfo.base.symbol}
+                      chosenAccount={this.state.bridgeStatus.chosenAccount}
+                      onWithdraw={this.handleWithdrawBaseRequest}
+                    />
                   </Tab.Pane>
                   <Tab.Pane eventKey="depositCntr">
                     <p>
@@ -1157,33 +1069,12 @@ class App extends Component {
                         <Glyphicon glyph="remove" title="close" />
                       </Button>
                     </p>
-                    <form id="depositCntrForm">
-                      <FormGroup controlId="step0">
-                        <ControlLabel>Step 0</ControlLabel>
-                        <HelpBlock>
-                          If you have {this.state.pairInfo.cntr.symbol} in another exchange or account,
-                          you'll first need to withdraw/transfer them to your account: {this.state.bridgeStatus.chosenAccount} .
-                          Currently it owns {this.state.balances.ownCntr} {this.state.pairInfo.cntr.symbol}.
-                        </HelpBlock>
-                      </FormGroup>
-                      <FormGroup controlId="transferAmount">
-                        <ControlLabel>Step 1</ControlLabel>
-                        <HelpBlock>
-                          This will send {this.state.pairInfo.cntr.symbol} from your account
-                          to the {this.state.pairInfo.symbol} book contract:
-                        </HelpBlock>
-                        <InputGroup>
-                          <InputGroup.Addon>Deposit Amount</InputGroup.Addon>
-                          <FormControl type="text" value={this.state.depositCntr.amount} onChange={this.handleDepositCntrAmountChange}/>
-                          <InputGroup.Addon>{this.state.pairInfo.cntr.symbol}</InputGroup.Addon>
-                        </InputGroup>
-                        <SendingButton bsStyle="primary" onClick={this.handleDepositCntrClick} text={"Deposit " + this.state.pairInfo.cntr.symbol} />
-                        <FormControl.Feedback />
-                        <HelpBlock>
-                          Don't forget to leave some {this.state.pairInfo.cntr.symbol} in your account to pay for gas fees.
-                        </HelpBlock>
-                      </FormGroup>
-                    </form>
+                    <DepositEth 
+                      symbol={this.state.pairInfo.cntr.symbol}
+                      ownAmount={this.state.balances.ownCntr}
+                      chosenAccount={this.state.bridgeStatus.chosenAccount}
+                      onDeposit={this.handleDepositCntrRequest}
+                    />
                   </Tab.Pane>
                   <Tab.Pane eventKey="withdrawCntr">
                     <p>
@@ -1192,22 +1083,11 @@ class App extends Component {
                         <Glyphicon glyph="remove" title="close" />
                       </Button>
                     </p>
-                    <form id="withdrawCntrForm">
-                      <FormGroup controlId="transferAmount">
-                        <HelpBlock>
-                          This will send {this.state.pairInfo.cntr.symbol} held for you
-                          by the {this.state.pairInfo.symbol} book contract to your account:
-                          {" "}{this.state.bridgeStatus.chosenAccount}
-                        </HelpBlock>
-                        <InputGroup>
-                          <InputGroup.Addon>Withdrawal Amount</InputGroup.Addon>
-                          <FormControl type="text" value={this.state.withdrawCntr.amount} onChange={this.handleWithdrawCntrAmountChange}/>
-                          <InputGroup.Addon>{this.state.pairInfo.cntr.symbol}</InputGroup.Addon>
-                        </InputGroup>
-                        <SendingButton bsStyle="warning" onClick={this.handleWithdrawCntrClick} text={"Withdraw " + this.state.pairInfo.cntr.symbol} />
-                        <FormControl.Feedback />
-                      </FormGroup>
-                    </form>
+                    <Withdraw 
+                      symbol={this.state.pairInfo.cntr.symbol}
+                      chosenAccount={this.state.bridgeStatus.chosenAccount}
+                      onWithdraw={this.handleWithdrawCntrRequest}
+                    />
                   </Tab.Pane>
                   <Tab.Pane eventKey="depositRwrd">
                     <p>
