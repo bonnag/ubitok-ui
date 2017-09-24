@@ -25,6 +25,8 @@
     "web3": "^0.20.1",
     "web3-provider-engine": "^13.2.9"
   },
+  "dev-dependencies": {
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
