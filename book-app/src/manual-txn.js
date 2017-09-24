@@ -1,7 +1,7 @@
 // Choose how to connect to Ethereum network.
 
 import React from "react";
-import { Button, ButtonToolbar, Modal, FormGroup, ControlLabel, FormControl, InputGroup } from "react-bootstrap";
+import { Button, ButtonToolbar, Modal, FormGroup, ControlLabel, FormControl, InputGroup, Alert } from "react-bootstrap";
 import { NotificationManager } from "react-notifications";
 import copyToClipboard from "copy-to-clipboard";
 
@@ -16,6 +16,8 @@ class ManualTxn extends React.Component {
   // gasLimit
   // data
   // onDone
+  // chosenNetworkId
+  // chosenNetworkName
   constructor(props) {
     super(props);
   }
@@ -56,6 +58,11 @@ class ManualTxn extends React.Component {
           <p>
             Here are the details you need to copy into <b><a href="https://www.myetherwallet.com/#send-transaction">MyEtherWallet Send Ether &amp; Tokens</a></b>:
           </p>
+          {this.props.chosenNetworkId !== "1" ? (
+          <Alert bsStyle="warning">
+          <b>Careful</b> - Make sure you choose the {this.props.chosenNetworkName}.
+          </Alert>
+          ) : undefined}
           <p>
             <i>Tip: Clicking a value below will copy it to your clipboard automatically.</i>
           </p>

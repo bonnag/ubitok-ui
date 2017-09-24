@@ -48,6 +48,10 @@ class App extends Component {
     super(props);
 
     const bookInfo = UbiBooks.bookInfo[props.bookId];
+    if (!bookInfo) {
+      window.location.replace("https://ubitok.io/products/");
+      return;
+    }
     const networkInfo = UbiBooks.networkInfo[bookInfo.networkId];
     bookInfo.liveness = networkInfo.liveness;
     if (networkInfo.liveness === "DEMO") {
@@ -979,6 +983,8 @@ class App extends Component {
                 gasLimit={this.state.manualTxnRequest.gasLimit}
                 data={this.state.manualTxnRequest.data}
                 onDone={(sent)=>{this.handleManualTxnRequestDone(sent)}}
+                chosenNetworkId={this.state.bridgeStatus.chosenNetworkId}
+                chosenNetworkName={this.state.bridgeStatus.chosenSupportedNetworkName}
               />
             </Col>
           </Row>
