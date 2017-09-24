@@ -71,14 +71,12 @@ class Withdraw extends React.Component {
             <InputGroup.Addon>{this.props.symbol}</InputGroup.Addon>
           </InputGroup>
           <SendingButton bsStyle="warning" onClick={this.handleWithdrawClick} text={"Withdraw " + this.props.symbol} />
-          <FormControl.Feedback>
-            {(this.state.error === "" ? undefined : (
-              <Alert bsStyle="danger" onDismiss={this.handleAlertDismiss}>
-                <p>{this.state.error}</p>
-                <p><Button onClick={this.handleAlertDismiss}>OK</Button></p>
-              </Alert>
-            ))}
-          </FormControl.Feedback>
+          {(this.state.error === "" ? undefined : (
+            <Alert bsStyle="danger" onDismiss={this.handleAlertDismiss}>
+              <p>{this.state.error}</p>
+              <p><Button onClick={this.handleAlertDismiss}>OK</Button></p>
+            </Alert>
+          ))}
         </FormGroup>
       </form>
     );

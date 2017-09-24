@@ -81,14 +81,12 @@ class DepositEth extends React.Component {
             <InputGroup.Addon>{this.props.symbol}</InputGroup.Addon>
           </InputGroup>
           <SendingButton bsStyle="primary" onClick={this.handleDepositClick} text={"Deposit " + this.props.symbol} />
-          <FormControl.Feedback>
-            { (this.state.error === "" ? undefined : (
-              <Alert bsStyle="danger" onDismiss={this.handleAlertDismiss}>
-                <p>{this.state.error}</p>
-                <p><Button onClick={this.handleAlertDismiss}>OK</Button></p>
-              </Alert>
-            ))}
-          </FormControl.Feedback>
+          {(this.state.error === "" ? undefined : (
+            <Alert bsStyle="danger" onDismiss={this.handleAlertDismiss}>
+              <p>{this.state.error}</p>
+              <p><Button onClick={this.handleAlertDismiss}>OK</Button></p>
+            </Alert>
+          ))}
           <HelpBlock>
             Don't forget to leave some ETH in your account to pay for gas fees.
           </HelpBlock>
