@@ -281,8 +281,14 @@ class Bridge {
   _getInfuraEndpoint = () => {
     // ok, it's trivial to bypass the obfuscation - but please don't, it's against the T&Cs.
     let token = decodeURI("%50%69%4E%33%47%64%63%45%39%6E%38%64%73%33%54%6F%46%4D%57%62");
-    // TODO - choose mainnet or ropsten accordingly!
-    return "https://ropsten.infura.io/" + token;
+    let networkId = this.targetNetworkInfo.networkId;
+    if (networkId === "3") {
+      return "https://ropsten.infura.io/" + token;
+    } else if (networkId === "1") {
+      return "https://mainnet.infura.io/" + token;
+    } else {
+      throw new Error("unknown networkId " + networkId);
+    }
   }
   
   // Internal - we need this to help filter events.

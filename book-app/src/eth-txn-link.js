@@ -8,6 +8,8 @@ class EthTxnLink extends React.Component {
   computeBaseUrl = () => {
     if (this.props.networkName === "Ropsten Test Network") {
       return "https://ropsten.etherscan.io/tx/";
+    } else if (this.props.networkName === "Main Network") {
+      return "https://etherscan.io/tx/";
     }
     // TODO - main net! something vaguely sensible for demo!
     return undefined;
