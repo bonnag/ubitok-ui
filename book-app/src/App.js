@@ -938,7 +938,7 @@ class App extends Component {
                 gasLimit={this.state.manualTxnRequest.gasLimit}
                 data={this.state.manualTxnRequest.data}
                 onDone={(sent)=>{this.handleManualTxnRequestDone(sent);}}
-                chosenNetworkId={this.state.bridgeStatus.chosenNetworkId}
+                chosenNetworkId={this.state.pairInfo.networkId}
                 chosenNetworkName={this.state.bridgeStatus.chosenSupportedNetworkName}
               />
             </Col>
