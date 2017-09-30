@@ -286,6 +286,8 @@ class Bridge {
       return "https://ropsten.infura.io/" + token;
     } else if (networkId === "1") {
       return "https://mainnet.infura.io/" + token;
+    } else if (networkId === "4") {
+      return "https://rinkeby.infura.io/" + token;
     } else {
       throw new Error("unknown networkId " + networkId);
     }
