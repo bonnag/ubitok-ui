@@ -615,7 +615,7 @@ class Bridge {
     );
   }
 
-  // Request a callback with the state of the given order.
+  // Request a callback with the state of the given order (just the bits that can change).
   // Callback fn should take (error, result) where result is as UbiTokTypes.decodeOrderState.
   // Returns nothing useful.
   getOrderState = (fmtOrderId, callback) => {
@@ -632,6 +632,23 @@ class Bridge {
     });
   }
 
+  // Request a callback with full details of the given order.
+  // Callback fn should take (error, result) where result is as UbiTokTypes.decodeOrderState.
+  // Returns nothing useful.
+  getOrderDetails = (fmtOrderId, callback) => {
+    if (!this.checkCanReadBook(callback)) {
+      return;
+    }
+    let rawOrderId = UbiTokTypes.encodeOrderId(fmtOrderId).valueOf();
+    this.bookContract.getOrder.call(rawOrderId, (error, result) => {
+      if (error) {
+        callback(error, undefined);
+      } else {
+        callback(undefined, UbiTokTypes.decodeOrder(fmtOrderId, result));
+      }
+    });
+  }
+  
   // Subscribe to receive a callback whenever a market event occurs.
   // Callback fn should take (error, result) where result is as UbiTokTypes.decodeMarketOrderEvent.
   // Returns nothing useful.

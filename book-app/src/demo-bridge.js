@@ -442,7 +442,7 @@ class DemoBridge {
     }, {}, callback);
   }
 
-  // Request a callback with the state of the given order.
+  // Request a callback with the state of the given order (just the bits that can change).
   // Callback fn should take (error, result) where result is as UbiTokTypes.decodeOrderState.
   // Returns nothing useful.
   getOrderState = (fmtOrderId, callback) => {
@@ -450,6 +450,29 @@ class DemoBridge {
       const refOrder = this.rx.getOrder(fmtOrderId);
       const fmtOrder = {
         orderId: refOrder.orderId,
+        status: refOrder.status,
+        reasonCode: refOrder.reasonCode,
+        rawExecutedBase: refOrder.executedBase,
+        rawExecutedCntr: refOrder.executedCntr,
+        rawFeesBaseOrCntr: refOrder.feesBaseOrCntr,
+        rawFeesRwrd: refOrder.feesRwrd
+      };
+      callback(undefined, fmtOrder);
+    });
+  }
+
+  // Request a callback with full details of the given order.
+  // Callback fn should take (error, result) where result is as UbiTokTypes.decodeOrder.
+  // Returns nothing useful.
+  getOrderDetails = (fmtOrderId, callback) => {
+    this._scheduleRead(() => {
+      const refOrder = this.rx.getOrder(fmtOrderId);
+      const fmtOrder = {
+        orderId: refOrder.orderId,
+        client: refOrder.client,
+        price: refOrder.price,
+        sizeBase: refOrder.sizeBase,
+        terms: refOrder.terms,
         status: refOrder.status,
         reasonCode: refOrder.reasonCode,
         rawExecutedBase: refOrder.executedBase,

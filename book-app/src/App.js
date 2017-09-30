@@ -578,6 +578,9 @@ class App extends Component {
 
   updateMyOrder = (orderId, partialOrder) => {
     let query = {};
+    if (!this.isInMyOrders(orderId)) {
+      return;
+    }
     query[orderId] = { $merge: partialOrder };
     this.setState((prevState, props) => {
       return {
@@ -605,16 +608,30 @@ class App extends Component {
   }
 
   refreshOrder = (orderId) => {
-    this.bridge.getOrderState(orderId, (error, result) => {
-      if (error) {
-        this.warn(error);
-        // TODO - retry?
-        return;
-      }
-      if (result) {
-        this.updateMyOrder(orderId, result);
-      }
-    });
+    if (!this.isInMyOrders(orderId)) {
+      this.bridge.getOrderDetails(orderId, (error, result) => {
+        if (error) {
+          this.warn(error);
+          // TODO - retry?
+          return;
+        }
+        if (result) {
+          // ah but what if it has appeared by now?
+          this.createMyOrder(result);
+        }
+      });
+    } else {
+      this.bridge.getOrderState(orderId, (error, result) => {
+        if (error) {
+          this.warn(error);
+          // TODO - retry?
+          return;
+        }
+        if (result) {
+          this.updateMyOrder(orderId, result);
+        }
+      });
+    }
   }
 
   handlePlaceOrderCallback = (orderId, error, result) => {
