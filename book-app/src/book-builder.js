@@ -9,12 +9,14 @@ class BookBuilder {
     this._bridge = bridge;
     this._subscriberFn = subscriberFn;
     this.isComplete = false;
+    this._minBlockNumber = 0;
     this._internalBook = new Map();
     this._queuedMarketEvents = [];
     this._bigZero = new BigNumber(0);
   }
 
   start = () => {
+    this._minBlockNumber = 0;
     this._internalBook.clear();
     this._bridge.subscribeFutureMarketEvents(this._handleFutureMarketEvent);
     this._bridge.walkBook(1, this._handleWalkBook);
@@ -30,10 +32,14 @@ class BookBuilder {
     var nextPricePacked;
     var done = false;
     if (!depth.isZero()) {
+      var blockNumber = result[3].toNumber();
+      if (this._minBlockNumber === 0 || blockNumber < this._minBlockNumber) {
+        this._minBlockNumber = blockNumber;
+      }
       this._internalBook.set(pricePacked, {
         count: result[2].toNumber(),
         depth: depth,
-        blockNumber: result[3].toNumber(),
+        blockNumber: blockNumber,
         // any events we get must be in newer blocks
         isBlockComplete: true
       });
@@ -137,6 +143,10 @@ class BookBuilder {
   }
 
   updateInternalBookFromEvent = (event) => {
+    // sometimes we seem to get ancient events from our filter?
+    if (event.blockNumber <= this._minBlockNumber) {
+      return;
+    }
     let entry = this._internalBook.has(event.pricePacked) ? this._internalBook.get(event.pricePacked) : {
       count: 0,
       depth: this._bigZero,
