@@ -69,3 +69,8 @@
   padding-right: 3px;
   vertical-align: text-bottom;
 }
+
+.small-print {
+  font-size: 10px;
+  font-style: italic;
+}

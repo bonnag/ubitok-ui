@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, Button, ButtonToolbar, FormGroup, FormControl, ControlLabel, HelpBlock, InputGroup } from "react-bootstrap";
+import { Alert, Button, ButtonToolbar, FormGroup, FormControl, HelpBlock, InputGroup } from "react-bootstrap";
 
 import SendingButton from "./sending-button.js";
 
@@ -289,13 +289,15 @@ class CreateOrder extends React.Component {
           </FormGroup>
         ) }
         <FormGroup controlId="createOrderTerms" validationState={this.getCreateOrderTermsValidationResult()[0]}>
-          <ControlLabel>Terms</ControlLabel>
-          <FormControl componentClass="select" value={this.state.terms} onChange={this.handleCreateOrderTermsChange}>
-            <option value="GTCNoGasTopup">Good Till Cancel (no gas topup)</option>
-            <option value="GTCWithGasTopup">Good Till Cancel (gas topup enabled)</option>
-            <option value="ImmediateOrCancel">Immediate Or Cancel</option>
-            <option value="MakerOnly">Maker Only</option>
-          </FormControl>
+          <InputGroup>
+            <InputGroup.Addon>Terms</InputGroup.Addon>
+            <FormControl componentClass="select" value={this.state.terms} onChange={this.handleCreateOrderTermsChange}>
+              <option value="GTCNoGasTopup">Good Till Cancel (no gas topup)</option>
+              <option value="GTCWithGasTopup">Good Till Cancel (gas topup enabled)</option>
+              <option value="ImmediateOrCancel">Immediate Or Cancel</option>
+              <option value="MakerOnly">Maker Only</option>
+            </FormControl>
+          </InputGroup>
           <HelpBlock>{this.getCreateOrderTermsValidationResult()[1]}</HelpBlock>
         </FormGroup>
         <FormGroup>

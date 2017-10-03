@@ -964,16 +964,32 @@ class App extends Component {
             <Col md={4}>
               <h5>Balances and Payments</h5>
               <Table bordered condensed id="funds-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Exchange</th>
+                    <th>External</th>
+                    <th></th>
+                  </tr>
+                </thead>
                 <tbody>
                   <tr>
-                    <td colSpan="2">
-                      <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip("Your " + this.state.pairInfo.base.name + " funds held in the contract. Can be sold for " + this.state.pairInfo.cntr.symbol + " or withdrawn.")}>
+                    <td>{this.state.pairInfo.base.symbol}</td>
+                    <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip("Your " + this.state.pairInfo.base.name + " funds held in the contract. Can be sold for " + this.state.pairInfo.cntr.symbol + " or withdrawn.")}>
+                      <td style={{textAlign:"right"}}>
                         <span>
                           <MoneyAmount displayAmount={this.state.balances.exchangeBase}/>
-                            &nbsp;
-                          {this.state.pairInfo.base.symbol}
                         </span>
-                      </OverlayTrigger>
+                      </td>
+                    </OverlayTrigger>
+                    <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip(this.state.pairInfo.base.name + " funds held by your address. You'll need to deposit them into the contract to buy " + this.state.pairInfo.cntr.symbol + ".")}>
+                      <td style={{textAlign:"right"}}>
+                        <span className="small-print">
+                          <MoneyAmount displayAmount={this.state.balances.ownBase}/>
+                        </span>
+                      </td>
+                    </OverlayTrigger>
+                    <td>
                       <ButtonToolbar className="pull-right">
                         <Button bsStyle="primary" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "depositBase"})}>Deposit</Button>
                         <Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawBase"})}>Withdraw</Button>
@@ -981,14 +997,22 @@ class App extends Component {
                     </td>
                   </tr>
                   <tr>
-                    <td colSpan="2">
-                      <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip("Your " + this.state.pairInfo.cntr.name + " funds held in the contract. Can be used to buy " + this.state.pairInfo.base.symbol + " or withdrawn.")}>
+                    <td>{this.state.pairInfo.cntr.symbol}</td>
+                    <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip("Your " + this.state.pairInfo.cntr.name + " funds held in the contract. Can be used to buy " + this.state.pairInfo.base.symbol + " or withdrawn.")}>
+                      <td style={{textAlign:"right"}}>
                         <span>
                           <MoneyAmount displayAmount={this.state.balances.exchangeCntr}/>
-                            &nbsp;
-                          {this.state.pairInfo.cntr.symbol}
                         </span>
-                      </OverlayTrigger>
+                      </td>
+                    </OverlayTrigger>
+                    <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip(this.state.pairInfo.cntr.name + " funds held by your address. You'll need to deposit them into the contract to buy " + this.state.pairInfo.base.symbol + ".")}>
+                      <td style={{textAlign:"right"}}>
+                        <span className="small-print">
+                          <MoneyAmount displayAmount={this.state.balances.ownCntr}/>
+                        </span>
+                      </td>
+                    </OverlayTrigger>
+                    <td>
                       <ButtonToolbar className="pull-right">
                         <Button bsStyle="primary" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "depositCntr"})}>Deposit</Button>
                         <Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawCntr"})}>Withdraw</Button>
@@ -996,14 +1020,22 @@ class App extends Component {
                     </td>
                   </tr>
                   <tr>
-                    <td colSpan="2">
-                      <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip("Your " + this.state.pairInfo.rwrd.name + " funds held in the contract. Can be used to pay fees or withdrawn.")}>
+                    <td>{this.state.pairInfo.rwrd.symbol}</td>
+                    <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip("Your " + this.state.pairInfo.rwrd.name + " funds held in the contract. Can be used to pay fees or withdrawn.")}>
+                      <td style={{textAlign:"right"}}>
                         <span>
                           <MoneyAmount displayAmount={this.state.balances.exchangeRwrd}/>
-                            &nbsp;
-                          {this.state.pairInfo.rwrd.symbol}
                         </span>
-                      </OverlayTrigger>
+                      </td>
+                    </OverlayTrigger>
+                    <OverlayTrigger placement="top" overlay={this.makeSimpleToolTip(this.state.pairInfo.rwrd.name + " funds held by your address. You can deposit them into the contract to pay trading fees.")}>
+                      <td style={{textAlign:"right"}}>
+                        <span className="small-print">
+                          <MoneyAmount displayAmount={this.state.balances.ownRwrd}/>
+                        </span>
+                      </td>
+                    </OverlayTrigger>
+                    <td>
                       <ButtonToolbar className="pull-right">
                         <Button bsStyle="primary" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "depositRwrd"})}>Deposit</Button>
                         <Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawRwrd"})}>Withdraw</Button>
@@ -1012,12 +1044,12 @@ class App extends Component {
                   </tr>
                   { (this.state.paymentHistory.length > 0) ? (
                     <tr>
-                      <th colSpan="2">History</th>
+                      <th colSpan="4">History</th>
                     </tr>
                   ) : undefined }
                   {this.state.paymentHistory.map((entry) =>
                     <tr key={entry.pmtId}>
-                      <td>
+                      <td colSpan="3">
                         { (entry.pmtStatus === "FailedSend") ? (
                           <Glyphicon glyph="exclamation-sign" className="standaloneGlyphicon" title="failed to send payment" />
                         ) : null }

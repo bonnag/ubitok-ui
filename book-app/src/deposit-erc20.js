@@ -85,7 +85,7 @@ class DepositErc20 extends React.Component {
             This is where you choose how much to deposit:
           </HelpBlock>
         </FormGroup>
-        <FormGroup controlid="approval" validationState={this.getApprovalValidationResult()[0]}>
+        <FormGroup controlId="approval" validationState={this.getApprovalValidationResult()[0]}>
           <InputGroup>
             <InputGroup.Addon>New Approved Amount</InputGroup.Addon>
             <FormControl type="text" value={this.state.newApprovedAmount} onChange={this.handleNewApprovedAmountChange}/>
