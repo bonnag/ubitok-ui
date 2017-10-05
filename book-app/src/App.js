@@ -34,7 +34,7 @@ import "./App.css";
 import "react-notifications/lib/notifications.css";
 
 import MoneyAmount from "./money-amount.js";
-import Bridge from "./bridge.js";
+import Bridge from "./polling-bridge.js";
 import BookBuilder from "./book-builder.js";
 import DemoBridge from "./demo-bridge.js";
 import EventEmitter from "./event-emitter.js";
