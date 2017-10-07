@@ -965,11 +965,11 @@ class App extends Component {
               <h5>Balances and Payments</h5>
               <Table bordered condensed id="funds-table">
                 <thead>
-                  <tr>
+                  <tr className="small-print">
                     <th></th>
                     <th>Exchange</th>
                     <th>External</th>
-                    <th></th>
+                    <th>Deposit &amp; Withdraw</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -991,8 +991,7 @@ class App extends Component {
                     </OverlayTrigger>
                     <td>
                       <ButtonToolbar className="pull-right">
-                        <Button bsStyle="primary" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "depositBase"})}>Deposit</Button>
-                        <Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawBase"})}>Withdraw</Button>
+                        <Button bsStyle="primary" bsSize="xsmall" title="Deposit into Exchange" onClick={() => this.setState({paymentTabKey: "depositBase"})}><Glyphicon glyph="plus" title="" />Dep</Button><Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawBase"})}><Glyphicon glyph="minus" title="Withdraw from Exchange" />Wtd</Button>
                       </ButtonToolbar>
                     </td>
                   </tr>
@@ -1014,8 +1013,7 @@ class App extends Component {
                     </OverlayTrigger>
                     <td>
                       <ButtonToolbar className="pull-right">
-                        <Button bsStyle="primary" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "depositCntr"})}>Deposit</Button>
-                        <Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawCntr"})}>Withdraw</Button>
+                        <Button bsStyle="primary" bsSize="xsmall" title="Deposit into Exchange" onClick={() => this.setState({paymentTabKey: "depositCntr"})}><Glyphicon glyph="plus" title="" />Dep</Button><Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawCntr"})}><Glyphicon glyph="minus" title="Withdraw from Exchange" />Wtd</Button>
                       </ButtonToolbar>
                     </td>
                   </tr>
@@ -1037,8 +1035,7 @@ class App extends Component {
                     </OverlayTrigger>
                     <td>
                       <ButtonToolbar className="pull-right">
-                        <Button bsStyle="primary" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "depositRwrd"})}>Deposit</Button>
-                        <Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawRwrd"})}>Withdraw</Button>
+                        <Button bsStyle="primary" bsSize="xsmall" title="Deposit into Exchange" onClick={() => this.setState({paymentTabKey: "depositRwrd"})}><Glyphicon glyph="plus" title="" />Dep</Button><Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawRwrd"})}><Glyphicon glyph="minus" title="Withdraw from Exchange" />Wtd</Button>
                       </ButtonToolbar>
                     </td>
                   </tr>
