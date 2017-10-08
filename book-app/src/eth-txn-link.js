@@ -10,8 +10,10 @@ class EthTxnLink extends React.Component {
       return "https://ropsten.etherscan.io/tx/";
     } else if (this.props.networkName === "Main Network") {
       return "https://etherscan.io/tx/";
+    } else if (this.props.networkName === "Rinkeby Test Network") {
+      return "https://rinkeby.etherscan.io/rx/";
     }
-    // TODO - main net! something vaguely sensible for demo!
+    // TODO - something vaguely sensible for demo!
     return undefined;
   }
 
@@ -21,7 +23,7 @@ class EthTxnLink extends React.Component {
     }
     return (
       <a href={this.computeBaseUrl() + this.props.txnHash} target="_blank" rel="noopener noreferrer">
-        <img src={ethLogo} alt="Ethereum Transaction" width="20" height="20" />
+        <img src={ethLogo} title="View Ethereum Transaction" alt="Ethereum Logo" width="20" height="20" />
         { (this.props.large) ? (
           <span className="tinyHex">{this.props.txnHash}</span>
         ) : null }

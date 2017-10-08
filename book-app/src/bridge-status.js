@@ -54,7 +54,7 @@ class BridgeStatus extends React.Component {
         ) : this.props.bridgeStatus.accountLocked && this.props.bridgeStatus.mightReadAccountOrders ? (
           <Panel header="Ethereum Account Locked" bsStyle="danger">
             <p>UbiTok.io needs to know which Ethereum account to use.</p>
-            <p>Try unlocking your Ethereum Client (e.g. MetaMask, Mist).</p>
+            <p>Try unlocking your Ethereum Client (e.g. MetaMask, Mist). You might need to reload this page after unlocking.</p>
           </Panel>
         ) : this.props.bridgeStatus.accountChanged ? (
           <Panel header="Ethereum Account Changed" bsStyle="danger">

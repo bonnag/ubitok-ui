@@ -821,6 +821,8 @@ class App extends Component {
       window.open("https://ubitok.io/", "_blank");
     } else if (key === "ViewBooks") {
       window.open("https://ubitok.io/products/", "_blank");
+    } else if (key === "Help") {
+      window.open("https://ubitok.io/help/", "_blank");
     } else if (key === "DemoHelp") {
       this.setState((prevState, props) => {
         return {
@@ -930,7 +932,9 @@ class App extends Component {
                 <NavItem eventKey="Exchange" href="#">Exchange</NavItem>
                 { (this.state.pairInfo.liveness === "DEMO") ? (
                   <NavItem eventKey="DemoHelp" href="#">Help</NavItem>
-                ) : undefined }
+                ) : (
+                  <NavItem eventKey="Help" href="#">Help</NavItem>
+                ) }
               </Nav>
             </Navbar>
           </Row>
@@ -991,7 +995,7 @@ class App extends Component {
                     </OverlayTrigger>
                     <td>
                       <ButtonToolbar className="pull-right">
-                        <Button bsStyle="primary" bsSize="xsmall" title="Deposit into Exchange" onClick={() => this.setState({paymentTabKey: "depositBase"})}><Glyphicon glyph="plus" title="" />Dep</Button><Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawBase"})}><Glyphicon glyph="minus" title="Withdraw from Exchange" />Wtd</Button>
+                        <Button bsStyle="primary" bsSize="xsmall" title="Deposit into Exchange" onClick={() => this.setState({paymentTabKey: "depositBase"})}><Glyphicon glyph="plus" title="" />Dep</Button><Button bsStyle="warning" bsSize="xsmall" title="Withdraw from Exchange" onClick={() => this.setState({paymentTabKey: "withdrawBase"})}><Glyphicon glyph="minus" title="" />Wtd</Button>
                       </ButtonToolbar>
                     </td>
                   </tr>
@@ -1013,7 +1017,7 @@ class App extends Component {
                     </OverlayTrigger>
                     <td>
                       <ButtonToolbar className="pull-right">
-                        <Button bsStyle="primary" bsSize="xsmall" title="Deposit into Exchange" onClick={() => this.setState({paymentTabKey: "depositCntr"})}><Glyphicon glyph="plus" title="" />Dep</Button><Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawCntr"})}><Glyphicon glyph="minus" title="Withdraw from Exchange" />Wtd</Button>
+                        <Button bsStyle="primary" bsSize="xsmall" title="Deposit into Exchange" onClick={() => this.setState({paymentTabKey: "depositCntr"})}><Glyphicon glyph="plus" title="" />Dep</Button><Button bsStyle="warning" bsSize="xsmall" title="Withdraw from Exchange" onClick={() => this.setState({paymentTabKey: "withdrawCntr"})}><Glyphicon glyph="minus" title="" />Wtd</Button>
                       </ButtonToolbar>
                     </td>
                   </tr>
@@ -1035,7 +1039,7 @@ class App extends Component {
                     </OverlayTrigger>
                     <td>
                       <ButtonToolbar className="pull-right">
-                        <Button bsStyle="primary" bsSize="xsmall" title="Deposit into Exchange" onClick={() => this.setState({paymentTabKey: "depositRwrd"})}><Glyphicon glyph="plus" title="" />Dep</Button><Button bsStyle="warning" bsSize="xsmall" onClick={() => this.setState({paymentTabKey: "withdrawRwrd"})}><Glyphicon glyph="minus" title="Withdraw from Exchange" />Wtd</Button>
+                        <Button bsStyle="primary" bsSize="xsmall" title="Deposit into Exchange" onClick={() => this.setState({paymentTabKey: "depositRwrd"})}><Glyphicon glyph="plus" title="" />Dep</Button><Button bsStyle="warning" bsSize="xsmall" title="Withdraw from Exchange" onClick={() => this.setState({paymentTabKey: "withdrawRwrd"})}><Glyphicon glyph="minus" title="" />Wtd</Button>
                       </ButtonToolbar>
                     </td>
                   </tr>
