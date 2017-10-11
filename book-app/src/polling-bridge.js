@@ -22,11 +22,22 @@ class PollingBridge {
     this.blockNumber = undefined;
     this.blockDate = undefined;
     this.statusSubscribers = [];
+    this.balanceSubscribers = [];
     this.startedConnectingAt = undefined;
     this.bridgeMode = undefined;
     this.manualEthAddress = "";
     this.futureMarketEventsPoller = new EventsPoller();
     this.futureClientEventsPoller = new EventsPoller();
+  }
+
+  panic = (msg) => {
+    this.warn(msg);
+  }
+
+  warn = (msg) => {
+    /* eslint-disable no-console */
+    console.log("UbiTok Bridge Warning:", msg);
+    /* eslint-enable no-console */
   }
 
   // Used to initialise our page before polling starts.
@@ -61,6 +72,11 @@ class PollingBridge {
   //   handleManualTransactionRequest will tell the user how to send a txn.
   init = (bridgeMode, manualEthAddress, handleManualTransactionRequest) => {
     this.bridgeMode = bridgeMode;
+    if (bridgeMode === "manual") {
+      if (manualEthAddress.substr(0, 2) !== "0x") {
+        manualEthAddress = "0x" + manualEthAddress;
+      }
+    }
     this.manualEthAddress = manualEthAddress;
     this.handleManualTransactionRequest = handleManualTransactionRequest;
     this.startedConnectingAt = new Date();
@@ -299,32 +315,39 @@ class PollingBridge {
   // Internal - we need this to help filter events and trigger polling.
   // We don't consider the bridge ready to make calls until we've got it.
   _handleBlockNumber = (error, result) => {
-    if (!error) {
-      let newBlockNumber = result;
-      if (!this.initialBlockNumber) {
-        this.initialBlockNumber = newBlockNumber;
-      }
-      let oldBlockNumber = this.blockNumber;
-      if (!oldBlockNumber || newBlockNumber > oldBlockNumber) {
-        this.blockNumber = newBlockNumber;
-        this.blockDate = new Date();
-        if (oldBlockNumber) {
+    try {
+      if (!error) {
+        let newBlockNumber = result;
+        if (!this.initialBlockNumber) {
+          this.initialBlockNumber = newBlockNumber;
+        }
+        let oldBlockNumber = this.blockNumber;
+        if (!oldBlockNumber || newBlockNumber > oldBlockNumber) {
+          this.blockNumber = newBlockNumber;
+          this.blockDate = new Date();
           this._handleBlockNumberChange(oldBlockNumber, newBlockNumber);
         }
       }
+    } catch (e) {
+      this.warn(e);
     }
     window.setTimeout(() => {
       this.web3.eth.getBlockNumber(this._handleBlockNumber);
     }, 4000);
   }
 
+  // nb: oldBlockNumber will be undefined if first time we've polled
   // TODO - filter.watch() would be better but unreliable
   // TODO - how to handle chain re-org?
   /* eslint-disable no-unused-vars */
   _handleBlockNumberChange = (oldBlockNumber, newBlockNumber) => {
   /* eslint-enable no-unused-vars */
-    this.futureClientEventsPoller.poll(this.bookContract.ClientOrderEvent, this.initialBlockNumber, newBlockNumber);
-    this.futureMarketEventsPoller.poll(this.bookContract.MarketOrderEvent, this.initialBlockNumber, newBlockNumber);
+    this._pollBalances();
+    // no point polling first time since should have initial state anyway
+    if (oldBlockNumber) {
+      this.futureClientEventsPoller.poll(this.bookContract.ClientOrderEvent, this.initialBlockNumber, newBlockNumber);
+      this.futureMarketEventsPoller.poll(this.bookContract.MarketOrderEvent, this.initialBlockNumber, newBlockNumber);
+    }
     // TODO - we should periodiclly (90s?) rebuild the book + my orders to help mitigate against chain re-org
   }
 
@@ -335,6 +358,24 @@ class PollingBridge {
     this.statusSubscribers.push(callback);
   }
 
+  // Request periodic callbacks with client's balances (if available).
+  // Callback fn should take (error, result) where result is an object
+  // containing zero or more of the following formatted balances:
+  //   exchangeBase
+  //   exchangeCntr
+  //   exchangeRwrd
+  //   approvedBase
+  //   approvedRwrd
+  //   ownBase
+  //   ownCntr
+  //   ownRwrd
+  // The callback may be invoked more than once with different subsets -
+  // it should merge the results with any balances it already has.
+  // Returns nothing useful.
+  subscribeBalance = (callback) => {
+    this.balanceSubscribers.push(callback);
+  }
+  
   // Check if the bridge currently appears able to make public (constant, no account needed) calls.
   // Returns boolean immediately; if callbackIfNot given it will be invoked with an error.
   checkCanReadBook = (callbackIfNot) => {
@@ -372,30 +413,15 @@ class PollingBridge {
     return status.chosenAccount;
   }
 
-  // Request callback with client's balances (if available).
-  // Callback fn should take (error, result) where result is an object
-  // containing zero or more of the following formatted balances:
-  //   exchangeBase
-  //   exchangeCntr
-  //   exchangeRwrd
-  //   approvedBase
-  //   approvedRwrd
-  //   ownBase
-  //   ownCntr
-  //   ownRwrd
-  // The callback may be invoked more than once with different subsets -
-  // it should merge the results with any balances it already has.
-  // Returns nothing useful.
-  getBalances = (callback) => {
-    if (!this.checkCanReadAccountOrders(callback)) {
+  _pollBalances = () => {
+    if (!this.checkCanReadAccountOrders()) {
       return;
     }
     let wrapperCallback = (error, result) => {
       if (error) {
-        return callback(error, undefined);
+        // not much we can do
       } else {
-        let translatedResult = UbiTokTypes.decodeClientBalances(result);
-        return callback(error, translatedResult);
+        this._deliverClientBalances(result);
       }
     };
     let ourAddress = this._getOurAddress();
@@ -403,17 +429,30 @@ class PollingBridge {
     // We can't use the contract to get our eth balance due to a rather odd geth bug
     let wrapperCallback2 = (error, result) => {
       if (error) {
-        return callback(error, undefined);
+        // not much we can do
       } else {
-        let translatedResult = {
-          ownCntr: UbiTokTypes.decodeCntrAmount(result)
-        };
-        return callback(error, translatedResult);
+        this._deliverClientEthBalance(result);
       }
     };
     this.web3.eth.getBalance(ourAddress, wrapperCallback2);
   }
 
+  _deliverClientBalances(result) {
+    let translatedResult = UbiTokTypes.decodeClientBalances(result);
+    for (let cb of this.balanceSubscribers) {
+      cb(undefined, translatedResult);
+    }
+  }
+
+  _deliverClientEthBalance(result) {
+    let translatedResult = {
+      ownCntr: UbiTokTypes.decodeCntrAmount(result)
+    };
+    for (let cb of this.balanceSubscribers) {
+      cb(undefined, translatedResult);
+    }
+  }
+  
   sendTransaction = (goalDesc, appearDesc, contractAddress, contractMethod, contractArgs, ethValue, gasAmount, callback) => {
     let txnObj = {
       from: this._getOurAddress(),

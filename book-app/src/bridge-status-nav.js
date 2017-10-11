@@ -6,7 +6,7 @@ class BridgeStatusNav extends React.Component {
   render = () => {
     return (this.props.bridgeStatus.canReadAccountOrders) ? (
       <Navbar.Text>
-        <b>Account</b>&nbsp;{this.props.bridgeStatus.chosenAccount} on {this.props.bridgeStatus.chosenSupportedNetworkName}
+        <b>Account</b>&nbsp;<span className="small-print">{this.props.bridgeStatus.chosenAccount}</span> on {this.props.bridgeStatus.chosenSupportedNetworkName}
         &nbsp;&bull;&nbsp;
         <b>Block</b>&nbsp;{this.props.bridgeStatus.blockInfo}
       </Navbar.Text>

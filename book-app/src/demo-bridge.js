@@ -24,6 +24,7 @@ class DemoBridge {
     this.targetNetworkInfo = targetNetworkInfo;
 
     this.statusSubscribers = [];
+    this.balanceSubscribers = [];
     this.futureMarketEventSubscribers = [];
 
     this.chosenAccount = "0xDemoAccount1";
@@ -71,6 +72,7 @@ class DemoBridge {
     window.setInterval(this._processSendingQueue, 3000);
     window.setInterval(this._processMiningQueue, 5000);
     window.setTimeout(this._pollStatus, 1000);
+    window.setTimeout(this._pollBalance, 3000);
     window.setInterval(this._advanceActors, 2000);
   }
 
@@ -257,7 +259,7 @@ class DemoBridge {
   }
   /* eslint-enable no-unused-vars */
   
-  // Request callback with client's balances (if available).
+  // Request callbacks with client's balances (if available).
   // Callback fn should take (error, result) where result is an object
   // containing zero or more of the following formatted balances:
   //   exchangeBase
@@ -270,14 +272,19 @@ class DemoBridge {
   //   ownRwrd
   // The callback may be invoked more than once with different subsets.
   // Returns nothing useful.
-  getBalances = (callback) => {
-    this._scheduleRead(() => {
-      const rawBalances = this.rx.getClientBalances(this.chosenAccount);
-      const fmtBalances = UbiTokTypes.decodeClientBalances(rawBalances);
-      // the off-book eth balance is an oddity
-      fmtBalances.ownCntr = UbiTokTypes.decodeCntrAmount(this.rx.getOwnCntrBalance(this.chosenAccount));
-      callback(undefined, fmtBalances);
-    });
+  subscribeBalance = (callback) => {
+    this.balanceSubscribers.push(callback);
+  }
+
+  _pollBalance = () => {
+    const rawBalances = this.rx.getClientBalances(this.chosenAccount);
+    const fmtBalances = UbiTokTypes.decodeClientBalances(rawBalances);
+    // the off-book eth balance is an oddity
+    fmtBalances.ownCntr = UbiTokTypes.decodeCntrAmount(this.rx.getOwnCntrBalance(this.chosenAccount));
+    for (let cb of this.balanceSubscribers) {
+      cb(undefined, fmtBalances);
+    }
+    window.setTimeout(this._pollBalance, 3000);
   }
 
   // Submit a base deposit approval for given friendly base amount.

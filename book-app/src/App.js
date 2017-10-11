@@ -240,8 +240,7 @@ class App extends Component {
 
     };
     this.bridge.subscribeStatus(this.handleStatusUpdate);
-    // TODO - perhaps timeout better in-case really really slow ..
-    window.setInterval(this.pollBalances, 3000);
+    this.bridge.subscribeBalance(this.handleBalanceUpdate);
     window.setInterval(this.updateClock, 1000);
     window.setInterval(this.purgeExcessData, 30000);
     window.document.title = "UbiTok.io - " + this.state.pairInfo.symbol;
@@ -253,7 +252,7 @@ class App extends Component {
 
   warn = (msg) => {
     /* eslint-disable no-console */
-    console.log(msg);
+    console.log("UbiTok App warning:", msg);
     /* eslint-enable no-console */
   }
 
@@ -514,19 +513,16 @@ class App extends Component {
     this.refreshOrder(event.orderId);
   }
 
-  pollBalances = () => {
-    let callback = (error, newExchangeBalanceSubset) => {
-      if (error) {
-        // not much we can do, wait for retry
-        return;
-      }
-      this.setState((prevState, props) => {
-        return {
-          balances: update(prevState.balances, {$merge: newExchangeBalanceSubset})
-        };
-      });
-    };
-    this.bridge.getBalances(callback);
+  handleBalanceUpdate = (error, newExchangeBalanceSubset) => {
+    if (error) {
+      // not much we can do, wait for retry
+      return;
+    }
+    this.setState((prevState, props) => {
+      return {
+        balances: update(prevState.balances, {$merge: newExchangeBalanceSubset})
+      };
+    });
   }
 
   handleCreateOrderDirectionSelect = (key) => {

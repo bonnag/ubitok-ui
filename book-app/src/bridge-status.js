@@ -43,7 +43,7 @@ class BridgeStatus extends React.Component {
         ) : this.props.bridgeStatus.unsupportedNetwork ? (
           <Panel header="Unsupported Ethereum Network" bsStyle="danger">
             <p>This UbiTok.io book is only available on the {this.props.bridgeStatus.targetNetworkName}.</p>
-            <p>Try changing Ethereum Network in your Ethereum Client (e.g. Metamask, Mist).</p>
+            <p>Try changing Ethereum Network in your Ethereum Client (e.g. Metamask, Mist). You might need to reload this page.</p>
           </Panel>
         ) : this.props.bridgeStatus.networkChanged ? (
           <Panel header="Ethereum Network Changed" bsStyle="danger">
