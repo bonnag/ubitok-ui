@@ -347,6 +347,10 @@ class PollingBridge {
     if (oldBlockNumber) {
       this.futureClientEventsPoller.poll(this.bookContract.ClientOrderEvent, this.initialBlockNumber, newBlockNumber);
       this.futureMarketEventsPoller.poll(this.bookContract.MarketOrderEvent, this.initialBlockNumber, newBlockNumber);
+    } else {
+      // this is weird
+      this.futureClientEventsPoller.warmUp(this.bookContract.ClientOrderEvent,  this.initialBlockNumber);
+      this.futureMarketEventsPoller.warmUp(this.bookContract.MarketOrderEvent,  this.initialBlockNumber);
     }
     // TODO - we should periodiclly (90s?) rebuild the book + my orders to help mitigate against chain re-org
   }

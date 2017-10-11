@@ -9,6 +9,15 @@ class EventsPoller {
     this._lastRequestSentDate = undefined;
   }
 
+  // experimental - some versions of web3 + some metamasks on some networks
+  // don't seem to deliver event.filter.get() events unless we do this early?
+  /* eslint-disable no-unused-vars */
+  warmUp = (contractEventFn, initialBlockNumber) => {
+    var filter = contractEventFn();
+    filter.watch((error, result) => {});
+  }
+  /* eslint-enable no-unused-vars */
+
   // intended to be called when new block(s) have been spotted
   poll = (contractEventFn, initialBlockNumber, newBlockNumber) => {
     if (this._callbacks.length === 0) {
