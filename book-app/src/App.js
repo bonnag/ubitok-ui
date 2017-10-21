@@ -659,6 +659,7 @@ class App extends Component {
         // TODO - suppose should try to convey the txn hash for cancel/continue somehow
       } else if (result.event === "ManualSend") {
         // not much we can do?
+        this.updateMyOrder(orderId, { status: "Unknown" });
       } else if (result.event === "ManualSendCleanupHint") {
         // not much we can do?
         this.updateMyOrder(orderId, { modifyInProgress: undefined });
