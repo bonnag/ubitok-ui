@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Button, Modal } from "react-bootstrap";
+import { Table, Button, Modal, Panel } from "react-bootstrap";
 
 class BookInfo extends React.Component {
 
@@ -21,7 +21,17 @@ class BookInfo extends React.Component {
             <tbody>
               <tr>
                 <td>Symbol</td>
-                <td>{this.props.pairInfo.base.symbol}</td>
+                { (this.props.pairInfo.liveness === "LIVE") ? (
+                  <td>
+                    <a href={"https://etherscan.io/token/" + this.props.pairInfo.base.address} target="_blank" rel="noopener noreferrer">
+                      {this.props.pairInfo.base.symbol}
+                    </a>
+                  </td>
+                ) : (
+                  <td>
+                    {this.props.pairInfo.base.symbol}
+                  </td>
+                )}
                 <td>{this.props.pairInfo.cntr.symbol}</td>
               </tr>
               <tr>
@@ -41,6 +51,29 @@ class BookInfo extends React.Component {
               </tr>
             </tbody>
           </Table>
+          { this.props.pairInfo.newerVersion ? (
+            <Panel header="Deprecated Book Contract" bsStyle="danger">
+              This book contract has been replaced by&nbsp;
+              <a href={"/exchange/?pairId=" + this.props.pairInfo.newerVersion} target="_blank" rel="noopener noreferrer">
+                a newer one
+              </a>.
+              You should cancel any orders you have in this contract and withdraw funds.
+            </Panel>
+          ) : undefined }
+          { this.props.pairInfo.olderVersions && this.props.pairInfo.olderVersions.length > 0 ? (
+            <Panel header="Previous Book Contracts" bsStyle="info">
+              You are looking at the latest book contract for this pair.
+              If you still have orders or funds in the older contract version(s):
+              {this.props.pairInfo.olderVersions.map((entry)=>
+                <span>
+                  <a href={"/exchange/?pairId=" + entry} target="_blank" rel="noopener noreferrer">
+                    {entry}
+                  </a>, 
+                </span>
+              )}
+              you should cancel and withdraw them.
+            </Panel>
+          ) : undefined }
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.props.onHide}>Close</Button>

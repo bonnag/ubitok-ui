@@ -15,6 +15,7 @@ import Spinner from "react-spinkit";
 import UbiLogo from "./ubitok-logo.svg";
 import DemoLogo from "./demo-logo.svg";
 import TestLogo from "./test-logo.svg";
+import BetaLogo from "./beta-logo.svg";
 
 import BridgeStatus from "./bridge-status.js";
 import BridgeStatusNav from "./bridge-status-nav.js";
@@ -906,6 +907,9 @@ class App extends Component {
           ) : undefined }
           { (this.state.pairInfo.liveness === "TEST") ? (
             <img src={TestLogo} className="App-logo" alt="TEST" />
+          ) : undefined }
+          { (this.state.pairInfo.liveness === "LIVE") ? (
+            <img src={BetaLogo} className="App-logo" alt="BETA" />
           ) : undefined }
           <img src={UbiLogo} className="App-logo" alt="UbiTok.io" />- the unstoppable Ethereum token exchange
         </div>
