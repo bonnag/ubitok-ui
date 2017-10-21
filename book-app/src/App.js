@@ -417,6 +417,19 @@ class App extends Component {
     }
   }
 
+  handleClickReloadOrderBook = () => {
+    this.setState((prevState, props) => {
+      return {
+        book: update(prevState.book, {
+          isComplete: {$set: false},
+          bids: {$set: []},
+          asks: {$set: []},
+        })
+      };
+    });
+    this.bookBuilder.reload();
+  }
+
   getBookPadding = (side) => {
     let padding = [];
     for (let i = this.state.book[side].length; i < 6; i++) {
@@ -1181,8 +1194,12 @@ class App extends Component {
               <Row>
                 <Col md={12}>
                   <h5>
-                      Order Book
-                    {this.state.book.isComplete ? undefined : (
+                    Order Book
+                    {this.state.book.isComplete ? (
+                      <Button bsSize="xsmall" bsStyle="info" onClick={() => this.handleClickReloadOrderBook()} style={{marginLeft: "3px"}}>
+                        <Glyphicon glyph="refresh" title="reload order book" />
+                      </Button>
+                    ) : (
                       <Spinner name="line-scale" color="purple"/>
                     )}
                   </h5>

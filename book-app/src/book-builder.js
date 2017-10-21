@@ -22,6 +22,12 @@ class BookBuilder {
     this._bridge.walkBook(1, this._handleWalkBook);
   }
 
+  reload = () => {
+    this._minBlockNumber = 0;
+    this._internalBook.clear();
+    this._bridge.walkBook(1, this._handleWalkBook);
+  }
+    
   _handleWalkBook = (error, result) => {
     if (error) {
       this._subscriberFn(error, undefined);
