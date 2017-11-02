@@ -53,6 +53,7 @@ class App extends Component {
       window.location.replace("https://ubitok.io/products/");
       return;
     }
+    this.baseDecimals = bookInfo.base.decimals;
     const networkInfo = UbiBooks.networkInfo[bookInfo.networkId];
     bookInfo.liveness = networkInfo.liveness;
     if (networkInfo.liveness === "DEMO") {
@@ -350,7 +351,7 @@ class App extends Component {
   }
 
   formatBase = (rawAmount) => {
-    return UbiTokTypes.decodeBaseAmount(rawAmount);
+    return UbiTokTypes.decodeBaseAmount(rawAmount, this.baseDecimals);
   }
 
   formatCntr = (rawAmount) => {
@@ -502,7 +503,7 @@ class App extends Component {
     if (error) {
       return this.panic(error);
     }
-    var order = UbiTokTypes.decodeWalkClientOrder(result);
+    var order = UbiTokTypes.decodeWalkClientOrder(result, this.baseDecimals);
     if (order.status === "Unknown") {
       this.handleMyOrdersLoaded();
     } else {
@@ -1106,6 +1107,7 @@ class App extends Component {
                     {/* TODO - pass in bridge status so can prevent if account unavailable */}
                     <DepositErc20
                       symbol={this.state.pairInfo.base.symbol}
+                      decimals={this.state.pairInfo.base.decimals}
                       chosenAccount={this.state.bridgeStatus.chosenAccount}
                       ownAmount={this.state.balances.ownBase}
                       approvedAmount={this.state.balances.approvedBase}
@@ -1122,6 +1124,7 @@ class App extends Component {
                     </p>
                     <Withdraw 
                       symbol={this.state.pairInfo.base.symbol}
+                      decimals={this.state.pairInfo.base.decimals}
                       chosenAccount={this.state.bridgeStatus.chosenAccount}
                       onWithdraw={this.handleWithdrawBaseRequest}
                     />
@@ -1149,6 +1152,7 @@ class App extends Component {
                     </p>
                     <Withdraw 
                       symbol={this.state.pairInfo.cntr.symbol}
+                      decimals={this.state.pairInfo.cntr.decimals}
                       chosenAccount={this.state.bridgeStatus.chosenAccount}
                       onWithdraw={this.handleWithdrawCntrRequest}
                     />

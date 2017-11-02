@@ -8,6 +8,7 @@ class DemoActorStacker {
     
   constructor(bridge, actorAccount, direction, now) {
     this.bridge = bridge;
+    this.baseDecimals = bridge.bookInfo.base.decimals;
     this.actorAccount = actorAccount;
     this.direction = direction;
     this.interestingOrders = [];
@@ -45,12 +46,12 @@ class DemoActorStacker {
     var desiredOrders = [
       {
         price: this.direction + " @ " + (targetPrice1 + 1e-8).toFixed(3),
-        sizeBase: UbiTokTypes.encodeBaseAmount(100),
+        sizeBase: UbiTokTypes.encodeBaseAmount(100, this.baseDecimals),
         found: false
       },
       {
         price: this.direction + " @ " + (targetPrice2 + 1e-8).toFixed(3),
-        sizeBase: UbiTokTypes.encodeBaseAmount(250),
+        sizeBase: UbiTokTypes.encodeBaseAmount(250, this.baseDecimals),
         found: false
       }
     ];

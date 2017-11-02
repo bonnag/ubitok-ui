@@ -7,6 +7,7 @@ class BookBuilder {
 
   constructor(bridge, subscriberFn) {
     this._bridge = bridge;
+    this._baseDecimals = bridge.bookInfo.base.decimals;
     this._subscriberFn = subscriberFn;
     this.isComplete = false;
     this._minBlockNumber = 0;
@@ -82,7 +83,7 @@ class BookBuilder {
     for (let pair of sortedPairs) {
       let pricePacked = pair[0];
       let entry = pair[1];
-      let friendlyDepth = UbiTokTypes.decodeBaseAmount(entry.depth);
+      let friendlyDepth = UbiTokTypes.decodeBaseAmount(entry.depth, this._baseDecimals);
       let price = UbiTokTypes.decodePrice(pricePacked);
       let niceEntry = [price, friendlyDepth, entry.count];
       if (pricePacked <= UbiTokTypes.minBuyPricePacked) {
@@ -110,7 +111,7 @@ class BookBuilder {
         .filter((a) => a[0] <= UbiTokTypes.minBuyPricePacked && a[1].count > 0)
         .sort((a,b) => a[0]-b[0])
     );
-    let ourRawDepthRemaining = UbiTokTypes.encodeBaseAmount(fmtSizeBase);
+    let ourRawDepthRemaining = UbiTokTypes.encodeBaseAmount(fmtSizeBase, this._baseDecimals);
     let ourOppositeRawPrice = UbiTokTypes.oppositeEncodedPrice(ourRawPrice);
     let matches = 0;
     for (let pair of sortedPairs) {

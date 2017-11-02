@@ -8,6 +8,7 @@ class DemoActorWhale {
   constructor(bridge, actorAccount, direction, now) {
   /* eslint-enable no-unused-vars */
     this.bridge = bridge;
+    this.baseDecimals = bridge.bookInfo.base.decimals;
     this.actorAccount = actorAccount;
     this.direction = direction;
     this.baseSize = 50000;
@@ -56,7 +57,7 @@ class DemoActorWhale {
             this.actorAccount,
             orderId,
             this.direction + " @ " + targetPrice.toFixed(3),
-            UbiTokTypes.encodeBaseAmount(this.baseSize),
+            UbiTokTypes.encodeBaseAmount(this.baseSize, this.baseDecimals),
             "MakerOnly",
             0
           );

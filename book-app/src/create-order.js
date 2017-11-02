@@ -27,8 +27,12 @@ class CreateOrder extends React.Component {
     this.props.priceClickEventEmitter.subscribe("createOrder" + this.props.direction, this.setPrice);
   }
 
+  getBaseDecimals = () => {
+    return this.props.pairInfo.base.decimals;
+  }
+
   formatBase = (rawAmount) => {
-    return UbiTokTypes.decodeBaseAmount(rawAmount);
+    return UbiTokTypes.decodeBaseAmount(rawAmount, this.getBaseDecimals());
   }
 
   formatCntr = (rawAmount) => {
@@ -75,9 +79,9 @@ class CreateOrder extends React.Component {
     if (number.decimalPlaces() >= UbiTokTypes.baseDecimals || number.decimalPlaces() > 10) {
       return ["error", "Amount has too many decimal places"];
     }
-    let rawAmountBase = UbiTokTypes.encodeBaseAmount(amount);
+    let rawAmountBase = UbiTokTypes.encodeBaseAmount(amount, this.getBaseDecimals());
     let minInitialSize = this.props.pairInfo.base.minInitialSize;
-    if (rawAmountBase.lt(UbiTokTypes.encodeBaseAmount(minInitialSize))) {
+    if (rawAmountBase.lt(UbiTokTypes.encodeBaseAmount(minInitialSize, this.getBaseDecimals()))) {
       return ["error", "Amount is too small, must be at least " + minInitialSize];
     }
     if (rawAmountBase.gte("1e30")) {
@@ -86,7 +90,7 @@ class CreateOrder extends React.Component {
     if (this.props.direction === "Sell") {
       let availableBalance = this.props.balances.exchangeBase;
       if (availableBalance !== "" && 
-          rawAmountBase.gt(UbiTokTypes.encodeBaseAmount(availableBalance))) {
+          rawAmountBase.gt(UbiTokTypes.encodeBaseAmount(availableBalance, this.getBaseDecimals()))) {
         return ["error", "Your Book Contract " + this.props.pairInfo.base.symbol +
           " balance is too low, try a smaller amount or deposit more funds"];
       }
@@ -94,7 +98,7 @@ class CreateOrder extends React.Component {
     let helpMsg = undefined;
     if (this.props.direction === "Buy" && terms !== "MakerOnly") {
       let rawFees = rawAmountBase.times("0.0005");
-      helpMsg = "A fee of up to " + UbiTokTypes.decodeBaseAmount(rawFees) + " " + this.props.pairInfo.base.symbol + " may be deducted";
+      helpMsg = "A fee of up to " + UbiTokTypes.decodeBaseAmount(rawFees, this.getBaseDecimals()) + " " + this.props.pairInfo.base.symbol + " may be deducted";
     }
     return ["success", helpMsg];
   }

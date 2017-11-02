@@ -21,6 +21,7 @@ class DemoBridge {
     }
     
     this.bookInfo = bookInfo;
+    this._baseDecimals = bookInfo.base.decimals;
     this.targetNetworkInfo = targetNetworkInfo;
 
     this.statusSubscribers = [];
@@ -61,10 +62,10 @@ class DemoBridge {
     
     // give user some play money
     this.rx.setBalancesForTesting(this.chosenAccount,
-      UbiTokTypes.encodeBaseAmount("1000"),
+      UbiTokTypes.encodeBaseAmount("1000", this._baseDecimals),
       UbiTokTypes.encodeCntrAmount("200"),
       UbiTokTypes.encodeCntrAmount("0"),
-      UbiTokTypes.encodeBaseAmount("3000"),
+      UbiTokTypes.encodeBaseAmount("3000", this._baseDecimals),
       UbiTokTypes.encodeCntrAmount("600"),
       UbiTokTypes.encodeCntrAmount("0")
     );
@@ -133,7 +134,7 @@ class DemoBridge {
 
   _addActor = (actor) => {
     this._actors.push(actor);
-    this.rx.depositBaseForTesting(actor.actorAccount, UbiTokTypes.encodeBaseAmount("100000000"));
+    this.rx.depositBaseForTesting(actor.actorAccount, UbiTokTypes.encodeBaseAmount("100000000", this._baseDecimals));
     this.rx.depositCntrForTesting(actor.actorAccount, UbiTokTypes.encodeCntrAmount("10000000"));
   }
 
@@ -293,7 +294,7 @@ class DemoBridge {
   submitDepositBaseApprove = (fmtAmount, callback) => {
     let gasAmount = 250000;
     this._queueTxn(() => {
-      this.rx.baseTokenApprove(this.chosenAccount, UbiTokTypes.encodeBaseAmount(fmtAmount));
+      this.rx.baseTokenApprove(this.chosenAccount, UbiTokTypes.encodeBaseAmount(fmtAmount, this._baseDecimals));
     }, {gas: gasAmount}, callback);
   }
 
@@ -313,7 +314,7 @@ class DemoBridge {
   submitWithdrawBaseTransfer = (fmtAmount, callback) => {
     let gasAmount = 250000;
     this._queueTxn(() => {
-      this.rx.transferBase(this.chosenAccount, UbiTokTypes.encodeBaseAmount(fmtAmount));
+      this.rx.transferBase(this.chosenAccount, UbiTokTypes.encodeBaseAmount(fmtAmount, this._baseDecimals));
     }, {gas: gasAmount}, callback);
   }
 
@@ -416,7 +417,7 @@ class DemoBridge {
         this.chosenAccount,
         fmtOrderId,
         fmtPrice,
-        UbiTokTypes.encodeBaseAmount(fmtSizeBase),
+        UbiTokTypes.encodeBaseAmount(fmtSizeBase, this._baseDecimals),
         fmtTerms,
         maxMatches
       );

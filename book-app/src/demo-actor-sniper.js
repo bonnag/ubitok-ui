@@ -7,6 +7,7 @@ class DemoActorSniper {
     
   constructor(bridge, actorAccount, direction, now) {
     this.bridge = bridge;
+    this.baseDecimals = bridge.bookInfo.base.decimals;
     this.actorAccount = actorAccount;
     this.direction = direction;
     this.baseSizes = [2.5, 5, 10, 12, 20, 25, 50];
@@ -49,7 +50,7 @@ class DemoActorSniper {
           this.actorAccount,
           orderId,
           this.direction + " @ " + targetPrice.toFixed(3),
-          UbiTokTypes.encodeBaseAmount(this.rng.pick(this.baseSizes)),
+          UbiTokTypes.encodeBaseAmount(this.rng.pick(this.baseSizes), this.baseDecimals),
           "ImmediateOrCancel",
           5
         );

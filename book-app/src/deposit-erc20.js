@@ -10,6 +10,7 @@ class DepositErc20 extends React.Component {
 
   // props are:
   //   symbol
+  //   decimals
   //   chosenAccount
   //   ownAmount
   //   approvedAmount
@@ -34,8 +35,7 @@ class DepositErc20 extends React.Component {
 
   getApprovalValidationResult = () => {
     let amount = this.state.newApprovedAmount;
-    let decimals = 18; // TODO
-    return UbiTokTypes.validateAmount(amount, decimals);
+    return UbiTokTypes.validateAmount(amount, this.props.decimals);
   }
 
   handleApproveClick = () => {

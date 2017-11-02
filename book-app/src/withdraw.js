@@ -10,6 +10,7 @@ class Withdraw extends React.Component {
 
   // props are:
   //   symbol
+  //   decimals
   //   chosenAccount
   //   onWithdraw - called with amount
   constructor(props) {
@@ -31,8 +32,7 @@ class Withdraw extends React.Component {
 
   getValidationResult = () => {
     let amount = this.state.amount;
-    let decimals = 18; // TODO
-    return UbiTokTypes.validateAmount(amount, decimals);
+    return UbiTokTypes.validateAmount(amount, this.props.decimals);
   }
 
   handleWithdrawClick = () => {

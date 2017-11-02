@@ -12,7 +12,7 @@ class OrderDetails extends React.Component {
   // TODO - move these formatting things to some sort of shared helper class
 
   formatBase = (rawAmount) => {
-    return UbiTokTypes.decodeBaseAmount(rawAmount);
+    return UbiTokTypes.decodeBaseAmount(rawAmount, this.props.pairInfo.base.decimals);
   }
 
   formatCntr = (rawAmount) => {

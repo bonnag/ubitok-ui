@@ -1,3 +1,5 @@
+// !!!! TODO - baseDecimals WORK !!!!!
+
 import Web3 from "web3";
 import UbiTokTypes from "ubitok-jslib/ubi-tok-types.js";
 import ZeroClientProvider from "web3-provider-engine/zero.js";
@@ -12,6 +14,7 @@ class PollingBridge {
   constructor(bookInfo, targetNetworkInfo) {
 
     this.bookInfo = bookInfo;
+    this.baseDecimals = bookInfo.base.decimals;
     this.targetNetworkInfo = targetNetworkInfo;
 
     this.web3 = undefined;
@@ -442,7 +445,7 @@ class PollingBridge {
   }
 
   _deliverClientBalances(result) {
-    let translatedResult = UbiTokTypes.decodeClientBalances(result);
+    let translatedResult = UbiTokTypes.decodeClientBalances(result, this.baseDecimals);
     for (let cb of this.balanceSubscribers) {
       cb(undefined, translatedResult);
     }
@@ -492,7 +495,7 @@ class PollingBridge {
     this.sendTransaction(
       "approve tokens for the book contract", "approved amount change",
       this.baseToken.address, this.baseToken.approve,
-      [this.bookContract.address, UbiTokTypes.encodeBaseAmount(fmtAmount).valueOf()],
+      [this.bookContract.address, UbiTokTypes.encodeBaseAmount(fmtAmount, this.baseDecimals).valueOf()],
       new BigNumber(0),
       gasAmount,
       callback
@@ -530,7 +533,7 @@ class PollingBridge {
     this.sendTransaction(
       "withdraw tokens from the book contract", "token balance change",
       this.bookContract.address, this.bookContract.transferBase,
-      [UbiTokTypes.encodeBaseAmount(fmtAmount).valueOf()],
+      [UbiTokTypes.encodeBaseAmount(fmtAmount, this.baseDecimals).valueOf()],
       new BigNumber(0),
       gasAmount,
       callback
@@ -623,7 +626,7 @@ class PollingBridge {
       [
         UbiTokTypes.encodeOrderId(fmtOrderId).valueOf(),
         UbiTokTypes.encodePrice(fmtPrice).valueOf(),
-        UbiTokTypes.encodeBaseAmount(fmtSizeBase).valueOf(),
+        UbiTokTypes.encodeBaseAmount(fmtSizeBase, this.baseDecimals).valueOf(),
         UbiTokTypes.encodeTerms(fmtTerms).valueOf(),
         maxMatches,
       ],
