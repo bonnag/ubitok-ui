@@ -51,6 +51,9 @@ class BookInfo extends React.Component {
               </tr>
             </tbody>
           </Table>
+          { this.props.pairInfo.base.notes ? (
+            <Panel bsStyle="info">{this.props.pairInfo.base.notes}</Panel>
+          ) : undefined }
           { this.props.pairInfo.newerVersion ? (
             <Panel header="Deprecated Book Contract" bsStyle="danger">
               This book contract has been replaced by&nbsp;
@@ -61,7 +64,7 @@ class BookInfo extends React.Component {
             </Panel>
           ) : undefined }
           { this.props.pairInfo.olderVersions && this.props.pairInfo.olderVersions.length > 0 ? (
-            <Panel header="Previous Book Contracts" bsStyle="info">
+            <Panel header="Book Contract Version" bsStyle="info">
               You are looking at the latest book contract for this pair.
               If you still have orders or funds in the older contract version(s):
               {this.props.pairInfo.olderVersions.map((entry)=>

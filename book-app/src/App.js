@@ -923,9 +923,6 @@ class App extends Component {
           { (this.state.pairInfo.liveness === "TEST") ? (
             <img src={TestLogo} className="App-logo" alt="TEST" />
           ) : undefined }
-          { (this.state.pairInfo.liveness === "LIVE") ? (
-            <img src={BetaLogo} className="App-logo" alt="BETA" />
-          ) : undefined }
           <img src={UbiLogo} className="App-logo" alt="UbiTok.io" />- the unstoppable Ethereum token exchange
         </div>
         <Grid>
