@@ -15,7 +15,6 @@ import Spinner from "react-spinkit";
 import UbiLogo from "./ubitok-logo.svg";
 import DemoLogo from "./demo-logo.svg";
 import TestLogo from "./test-logo.svg";
-import BetaLogo from "./beta-logo.svg";
 
 import BridgeStatus from "./bridge-status.js";
 import BridgeStatusNav from "./bridge-status-nav.js";
