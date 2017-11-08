@@ -54,6 +54,16 @@ class BookInfo extends React.Component {
           { this.props.pairInfo.base.notes ? (
             <Panel bsStyle="info">{this.props.pairInfo.base.notes}</Panel>
           ) : undefined }
+          { (this.props.pairInfo.liveness === "LIVE") ? (
+            <Panel bsStyle="info">
+              Make sure you are trading the correct token - symbols are not always unique!<br/>
+              The address of this token is:
+              <a className="tinyHex" href={"https://etherscan.io/token/" + this.props.pairInfo.base.address} target="_blank" rel="noopener noreferrer">
+                {this.props.pairInfo.base.address}
+              </a>.<br/>
+              Careful though - never send tokens (or ether) to a token address - that's not how it works and you won't get them back.
+            </Panel>
+          ) : undefined }
           { this.props.pairInfo.newerVersion ? (
             <Panel header="Deprecated Book Contract" bsStyle="danger">
               This book contract has been replaced by&nbsp;

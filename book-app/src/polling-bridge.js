@@ -29,8 +29,8 @@ class PollingBridge {
     this.startedConnectingAt = undefined;
     this.bridgeMode = undefined;
     this.manualEthAddress = "";
-    this.futureMarketEventsPoller = new EventsPoller();
-    this.futureClientEventsPoller = new EventsPoller();
+    this.futureMarketEventsPoller = new EventsPoller("market");
+    this.futureClientEventsPoller = new EventsPoller("client");
   }
 
   panic = (msg) => {
@@ -352,8 +352,8 @@ class PollingBridge {
       this.futureMarketEventsPoller.poll(this.bookContract.MarketOrderEvent, this.initialBlockNumber, newBlockNumber);
     } else {
       // this is weird
-      this.futureClientEventsPoller.warmUp(this.bookContract.ClientOrderEvent,  this.initialBlockNumber);
-      this.futureMarketEventsPoller.warmUp(this.bookContract.MarketOrderEvent,  this.initialBlockNumber);
+      this.futureClientEventsPoller.warmUp(this.bookContract.ClientOrderEvent,  this.initialBlockNumber, this.web3);
+      this.futureMarketEventsPoller.warmUp(this.bookContract.MarketOrderEvent,  this.initialBlockNumber, this.web3);
     }
     // TODO - we should periodiclly (90s?) rebuild the book + my orders to help mitigate against chain re-org
   }
