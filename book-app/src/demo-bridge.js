@@ -279,7 +279,7 @@ class DemoBridge {
 
   _pollBalance = () => {
     const rawBalances = this.rx.getClientBalances(this.chosenAccount);
-    const fmtBalances = UbiTokTypes.decodeClientBalances(rawBalances);
+    const fmtBalances = UbiTokTypes.decodeClientBalances(rawBalances, this._baseDecimals);
     // the off-book eth balance is an oddity
     fmtBalances.ownCntr = UbiTokTypes.decodeCntrAmount(this.rx.getOwnCntrBalance(this.chosenAccount));
     for (let cb of this.balanceSubscribers) {
