@@ -10,7 +10,7 @@ class CreateOrder extends React.Component {
 
   // props are:
   //   direction - Buy / Sell
-  //   pairInfo
+  //   pairInfo - see App.js (base.symbol, cntr.decimals, etc etc)
   //   balances
   //   bridgeStatus
   //   onPlace - called with orderId, price, sizeBase, terms
@@ -105,7 +105,7 @@ class CreateOrder extends React.Component {
 
   getCreateOrderPriceValidationResult = () => {
     let pricePart = this.state.price;
-    let errorAndResult = UbiTokTypes.parseFriendlyPricePart(this.props.direction, pricePart);
+    let errorAndResult = UbiTokTypes.parseFriendlyPricePart(this.props.direction, pricePart, this.props.pairInfo.priceRangeAdjustment);
     if (errorAndResult[0]) {
       let error = errorAndResult[0];
       let helpMsg = "Price " + error.msg;

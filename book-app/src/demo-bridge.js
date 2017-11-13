@@ -22,6 +22,7 @@ class DemoBridge {
     
     this.bookInfo = bookInfo;
     this._baseDecimals = bookInfo.base.decimals;
+    this._priceRangeAdjustment = bookInfo.priceRangeAdjustment;
     this.targetNetworkInfo = targetNetworkInfo;
 
     this.statusSubscribers = [];
@@ -373,9 +374,9 @@ class DemoBridge {
   // Returns nothing useful.
   walkBook = (fromPricePacked, callback) => {
     this._scheduleRead(() => {
-      const rawResult = this.rx.walkBook(UbiTokTypes.decodePrice(fromPricePacked));
+      const rawResult = this.rx.walkBook(UbiTokTypes.decodePrice(fromPricePacked, this._priceRangeAdjustment));
       callback(undefined, [
-        new BigNumber(UbiTokTypes.encodePrice(rawResult[0])),
+        new BigNumber(UbiTokTypes.encodePrice(rawResult[0], this._priceRangeAdjustment)),
         rawResult[1],
         rawResult[2],
         new BigNumber(this.blockNumber)
@@ -513,7 +514,7 @@ class DemoBridge {
       eventTimestamp: refEvent.blockDate,
       marketOrderEventType: refEvent.marketOrderEventType,
       orderId: refEvent.orderId,
-      pricePacked: UbiTokTypes.encodePrice(refEvent.price),
+      pricePacked: UbiTokTypes.encodePrice(refEvent.price, this._priceRangeAdjustment),
       rawDepthBase: refEvent.depthBase,
       rawTradeBase: refEvent.tradeBase
     };

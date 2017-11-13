@@ -8,6 +8,7 @@ class BookBuilder {
   constructor(bridge, subscriberFn) {
     this._bridge = bridge;
     this._baseDecimals = bridge.bookInfo.base.decimals;
+    this._priceRangeAdjustment = bridge.bookInfo.priceRangeAdjustment;
     this._subscriberFn = subscriberFn;
     this.isComplete = false;
     this._minBlockNumber = 0;
@@ -84,7 +85,7 @@ class BookBuilder {
       let pricePacked = pair[0];
       let entry = pair[1];
       let friendlyDepth = UbiTokTypes.decodeBaseAmount(entry.depth, this._baseDecimals);
-      let price = UbiTokTypes.decodePrice(pricePacked);
+      let price = UbiTokTypes.decodePrice(pricePacked, this._priceRangeAdjustment);
       let niceEntry = [price, friendlyDepth, entry.count];
       if (pricePacked <= UbiTokTypes.minBuyPricePacked) {
         bids.push(niceEntry);
@@ -96,7 +97,7 @@ class BookBuilder {
   }
 
   estimateMatches = (fmtPrice, fmtSizeBase) => {
-    let ourRawPrice = UbiTokTypes.encodePrice(fmtPrice);
+    let ourRawPrice = UbiTokTypes.encodePrice(fmtPrice, this._priceRangeAdjustment);
     if (ourRawPrice === UbiTokTypes.invalidPricePacked) {
       return 0;
     }

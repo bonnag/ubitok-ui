@@ -15,6 +15,7 @@ class PollingBridge {
 
     this.bookInfo = bookInfo;
     this.baseDecimals = bookInfo.base.decimals;
+    this._priceRangeAdjustment = bookInfo.priceRangeAdjustment;
     this.targetNetworkInfo = targetNetworkInfo;
 
     this.web3 = undefined;
@@ -625,7 +626,7 @@ class PollingBridge {
       this.bookContract.address, this.bookContract.createOrder,
       [
         UbiTokTypes.encodeOrderId(fmtOrderId).valueOf(),
-        UbiTokTypes.encodePrice(fmtPrice).valueOf(),
+        UbiTokTypes.encodePrice(fmtPrice, this._priceRangeAdjustment).valueOf(),
         UbiTokTypes.encodeBaseAmount(fmtSizeBase, this.baseDecimals).valueOf(),
         UbiTokTypes.encodeTerms(fmtTerms).valueOf(),
         maxMatches,
@@ -710,7 +711,7 @@ class PollingBridge {
       if (error) {
         callback(error, undefined);
       } else {
-        callback(undefined, UbiTokTypes.decodeOrder(fmtOrderId, result));
+        callback(undefined, UbiTokTypes.decodeOrder(fmtOrderId, result, this._priceRangeAdjustment));
       }
     });
   }

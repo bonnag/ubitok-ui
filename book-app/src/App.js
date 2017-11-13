@@ -53,6 +53,7 @@ class App extends Component {
       return;
     }
     this.baseDecimals = bookInfo.base.decimals;
+    this.priceRangeAdjustment = bookInfo.priceRangeAdjustment;
     const networkInfo = UbiBooks.networkInfo[bookInfo.networkId];
     bookInfo.liveness = networkInfo.liveness;
     if (networkInfo.liveness === "DEMO") {
@@ -79,6 +80,7 @@ class App extends Component {
       // e.g.
       // symbol: "TEST/ETH",
       // liveness: "DEMO",
+      // priceRangeAdjustment: 0,
       // base: {
       //   tradableType: "ERC20",
       //   symbol: "TEST",
@@ -482,7 +484,7 @@ class App extends Component {
         logIndex: event.logIndex,
         eventTimestamp: event.eventTimestamp,
         makerOrderId: event.orderId,
-        makerPrice: UbiTokTypes.decodePrice(event.pricePacked),
+        makerPrice: UbiTokTypes.decodePrice(event.pricePacked, this.priceRangeAdjustment),
         executedBase: this.formatBase(event.rawTradeBase),
       });
     }
@@ -502,7 +504,7 @@ class App extends Component {
     if (error) {
       return this.panic(error);
     }
-    var order = UbiTokTypes.decodeWalkClientOrder(result, this.baseDecimals);
+    var order = UbiTokTypes.decodeWalkClientOrder(result, this.baseDecimals, this.priceRangeAdjustment);
     if (order.status === "Unknown") {
       this.handleMyOrdersLoaded();
     } else {
