@@ -78,6 +78,11 @@ class BridgeStatus extends React.Component {
             <p>Gas fees are needed to send Ethereum transactions, such as when placing orders or making payments.</p>
             <p>Consider topping up your {this.props.bridgeStatus.chosenAccount} account with more Ether (<i>not</i> your book contract balance).</p>
           </Panel>
+        ) : undefined} {
+        (this.props.pairWarning) ? (
+          <Panel header="Important Token Notice" bsStyle="warning">
+            <p>{this.props.pairWarning}</p>
+          </Panel>
         ) : undefined}
       </div>
     );

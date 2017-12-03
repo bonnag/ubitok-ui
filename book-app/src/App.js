@@ -953,7 +953,7 @@ class App extends Component {
           </Row>
           <Row>
             <Col md={12}>
-              <BridgeStatus bridgeStatus={this.state.bridgeStatus} ownEthBalance={this.state.balances.ownCntr} />
+              <BridgeStatus bridgeStatus={this.state.bridgeStatus} ownEthBalance={this.state.balances.ownCntr} pairWarning={this.state.pairInfo.warning} />
               {/* hidden dialogs and magical things */}
               <NotificationContainer/>
               <DemoHelp show={this.state.showDemoHelp} onHide={this.handleDemoHelpHide}/>
